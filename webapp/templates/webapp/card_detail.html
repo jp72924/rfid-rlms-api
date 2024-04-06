@@ -1,0 +1,8 @@
+<h1>Card Detail</h1>
+<p>UID: {{ card.uid }}</p>
+<p>Created at: {{ card.created_at|date:"Y-m-d H:i:s" }}</p>
+<p>Lock ID: {{ card.lock.id }}</p>
+
+<br>
+<a href="{% url 'card_update' uid=card.uid %}">Edit Card</a>
+<a href="{% url 'card_delete' uid=card.uid %}">Delete Card</a>

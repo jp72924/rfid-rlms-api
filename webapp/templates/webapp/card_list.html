@@ -1,0 +1,8 @@
+<h1>List of Cards</h1>
+<ul>
+  {% for card in cards %}
+    <li><a href="{% url 'card_detail' uid=card.uid %}">{{ card.uid }}</a></li>
+  {% endfor %}
+</ul>
+<br>
+<a href="{% url 'card_create' %}">Create New Card</a>

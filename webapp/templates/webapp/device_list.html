@@ -1,0 +1,8 @@
+<h1>List of Devices</h1>
+<ul>
+  {% for device in devices %}
+    <li><a href="{% url 'device_detail' id=device.id %}">{{ device.id }}</a></li>
+  {% endfor %}
+</ul>
+<br>
+<a href="{% url 'device_create' %}">Create New Device</a>

@@ -1,0 +1,6 @@
+<h1>Device Detail</h1>
+<p>ID: {{ device.id }}</p>
+
+<br>
+<a href="{% url 'device_update' id=device.id %}">Edit Device</a>
+<a href="{% url 'device_delete' id=device.id %}">Delete Device</a>

@@ -1,0 +1,8 @@
+<h1>List of Locks</h1>
+<ul>
+  {% for lock in locks %}
+    <li><a href="{% url 'lock_detail' id=lock.id %}">{{ lock.id }}</a></li>
+  {% endfor %}
+</ul>
+<br>
+<a href="{% url 'lock_create' %}">Create New Lock</a>

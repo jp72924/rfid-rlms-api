@@ -1,0 +1,18 @@
+<h1>Create Card</h1>
+<form method="post">
+  {% csrf_token %}  
+  <label for="card_uid">Card UID:</label>
+  <input type="text" name="uid" id="card_uid">
+
+  <br>
+
+  <label for="card_lock">Lock ID:</label>
+  <input type="text" name="lock_id" id="card_lock" list="suggestions">
+  <datalist id="suggestions">
+    {% for lock in locks %}
+    <option value="{{ lock.id }}">
+    {% endfor %}
+  </datalist>
+  
+  <button type="submit">Create</button>
+</form>

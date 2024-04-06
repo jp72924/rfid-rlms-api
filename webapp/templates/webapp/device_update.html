@@ -1,0 +1,6 @@
+<h1>Update Device</h1>
+<form method="post">
+  {% csrf_token %}  <label for="device_id">Device ID:</label>
+  <input type="text" name="id" id="device_id">
+  <button type="submit">Submit</button>
+</form>

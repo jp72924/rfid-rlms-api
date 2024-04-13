@@ -28,3 +28,26 @@ class User(models.Model):
 class Role(models.Model):
   id = models.IntegerField(primary_key=True)
   name = models.CharField(max_length=255)
+
+
+class Record(models.Model):
+  timestamp = models.DateTimeField(default=timezone.now)
+  level = models.CharField(max_length=50, choices=[
+      ('debug', 'Debug'),
+      ('info', 'Info'),
+      ('warning', 'Warning'),
+      ('error', 'Error'),
+      ('critical', 'Critical'),
+  ])
+  message = models.TextField()
+  
+  # Optional fields
+  # user = models.ForeignKey('User', on_delete=models.SET_NULL, blank=True, null=True)
+  # app_name = models.CharField(max_length=255, blank=True)
+  # Additional data fields can be added based on your needs
+
+  class Meta:
+    ordering = ['-timestamp']  # Order logs by most recent first
+
+  def __str__(self):
+    return f"{self.timestamp} - {self.level}: {self.message[:50]}"  # Truncate message for display

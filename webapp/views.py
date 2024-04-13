@@ -38,8 +38,10 @@ def auth(request):
 # Cards
 
 def card_list(request):
+  view = 'cards'
   cards = Card.objects.all()
-  context = {'cards': cards}
+  locks = Lock.objects.all()
+  context = {'view': view, 'cards': cards, 'locks': locks}
   return render(request, 'webapp/card_list.html', context)
 
 

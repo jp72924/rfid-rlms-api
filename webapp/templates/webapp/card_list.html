@@ -1,8 +1,97 @@
-<h1>List of Cards</h1>
-<ul>
-  {% for card in cards %}
-    <li><a href="{% url 'card_detail' uid=card.uid %}">{{ card.uid }}</a></li>
-  {% endfor %}
-</ul>
-<br>
-<a href="{% url 'card_create' %}">Create New Card</a>
+{% extends 'webapp/base.html' %}
+
+{% block content %}
+
+<div class="cover d-flex fx-center fy-center">
+  <div class="popup-dialog">
+    <p class="title">New Card</p>
+    <form action="#">
+      <div class="inner-form">
+
+        <div class="group">
+          <input class="m-input" id="uid" type="text" name="uid" value="" aria-labelledby="label-uid">
+          <label for="uid" class="label" id="label-uid">
+            <div class="text">UID</div>
+          </label>
+        </div>
+
+        <div class="group">
+          <input class="m-input" id="created-at" type="datetime-local" name="created-at" value="{% now 'Y-m-d' %}T{% now 'H:i' %}"
+            aria-labelledby="label-createdAt" disabled>
+          <label for="created-at" class="label" id="label-created-at">
+            <div class="text">Created at</div>
+          </label>
+        </div>
+
+        <div class="group">
+          <input class="m-input" list="locks" id="lock" name="lock" aria-labelledby="label-lock">
+          <label for="lock" class="label" id="label-lock">
+            <div class="text">Choose a lock</div>
+          </label>
+          {% for lock in locks %}
+          <datalist id="locks">
+            <option value="{{ lock.id }}"></option>
+          </datalist>
+          {% endfor %}
+        </div>
+
+      </div>
+    </form>
+    <div class="buttons-pane">
+      <button id="new">Create</button>
+      <button id="none">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap full-width">
+  <button class="btn btn-new no-select"><i class="bi bi-plus-lg"></i> Nuevo</button>
+  <table class="table">
+    <thead class="thead">
+      <tr class="tr">
+        <th class="no-select">Lock</th>
+        <th class="no-select">Created at</th>
+        <th class="no-select"><i class="bi bi-gear"></i></th>
+      </tr>
+    </thead>
+    <tbody class="tbody">
+      {% for card in cards %}
+      <tr class="tr">
+        <td>{{ card.lock.id }}</td>
+        <td>{{ card.created_at|date:'Y-m-d H:i:s' }}</td>
+        <td>
+          <button class="btn btn-more btn-edit"><i class="bi bi-pencil-fill"></i></button>
+          <button class="btn btn-more btn-delete"><i class="bi bi-trash3-fill"></i></button>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<script>
+  $(".btn-new").click(function () {
+      $(".cover").css("display", "flex");
+    });
+
+  $("#none").click(function () {
+    $(".cover").css("display", "none");
+  });
+
+  const uid = document.getElementById('uid');
+  const createdAt = document.getElementById('createdAt');
+  const lock = document.getElementById('lock');
+
+  uid.addEventListener('input', () => {
+    uid.setAttribute('value', uid.value);
+  });
+
+  createdAt.addEventListener('input', () => {
+    createdAt.setAttribute('value', createdAt.value);
+  });
+
+  lock.addEventListener('input', () => {
+    lock.setAttribute('value', lock.value);
+  });
+</script>
+{% endblock content %}

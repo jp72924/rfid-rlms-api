@@ -46,26 +46,30 @@ def card_list(request):
 
 
 def card_detail(request, uid):
+  view = 'cards'
+  cards = Card.objects.all()
+  locks = Lock.objects.all()
   try:
     card = Card.objects.get(uid=uid)
   except Card.DoesNotExist:
     raise Http404("Card Not Found")
-  context = {'card': card}
-  return render(request, 'webapp/card_detail.html', context)
+  context = {'view': view, 'cards': cards, 'locks': locks, 'query': card}
+  return render(request, 'webapp/card_list.html', context)
 
 
 def card_create(request):
+  view = 'cards'
+  cards = Card.objects.all()
   locks = Lock.objects.all()
   
   if request.method == 'POST':
     card_uid = request.POST.get('uid')
-    card_lock = Lock(id=request.POST.get('lock_id'))
+    card_lock = Lock(id=request.POST.get('lock'))
+    print(card_uid, card_lock)
     if card_uid:
       card = Card(uid=card_uid, lock=card_lock)
       card.save()
-      return redirect('card_list')
-  context = {'locks': locks}
-  return render(request, 'webapp/card_create.html', context)
+  return redirect('card_list')
 
 
 def card_update(request, uid):

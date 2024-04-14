@@ -1,32 +1,36 @@
 {% extends 'webapp/base.html' %}
 
 {% block content %}
-
-<div class="cover d-flex fx-center fy-center">
+<div class="cover d-flex fx-center fy-center" {% if not query %}style="display: none" {% endif %}>
+  
   <div class="popup-dialog">
     <p class="title">New Card</p>
-    <form action="#">
+
+    <form action="{% url 'card_create' %}" method="post">
+      {% csrf_token %}
+
       <div class="inner-form">
-
         <div class="group">
-          <input class="m-input" id="uid" type="text" name="uid" value="" aria-labelledby="label-uid">
-          <label for="uid" class="label" id="label-uid">
-            <div class="text">UID</div>
+          <input class="m-input" id="uid" type="text" name="uid" value="{{ query.uid }}" aria-labelledby="label-uid">
+          <label for="uid" class="m-label" id="label-uid">
+            <div class="m-label-text">UID</div>
           </label>
         </div>
 
         <div class="group">
-          <input class="m-input" id="created-at" type="datetime-local" name="created-at" value="{% now 'Y-m-d' %}T{% now 'H:i' %}"
+          <input class="m-input" id="created-at" type="datetime-local" name="created-at"
+            value="{% if query %}{{ query.created_at|date:'Y-m-d' }}T{{ query.created_at|date:'H:i' }}{% else %}{% now 'Y-m-d' %}T{% now 'H:i' %}{% endif %}"
             aria-labelledby="label-createdAt" disabled>
-          <label for="created-at" class="label" id="label-created-at">
-            <div class="text">Created at</div>
+          <label for="created-at" class="m-label" id="label-created-at">
+            <div class="m-label-text">Created at</div>
           </label>
         </div>
 
         <div class="group">
-          <input class="m-input" list="locks" id="lock" name="lock" aria-labelledby="label-lock">
-          <label for="lock" class="label" id="label-lock">
-            <div class="text">Choose a lock</div>
+          <input class="m-input" list="locks" id="lock" name="lock" value="{{ query.lock.id }}"
+            aria-labelledby="label-lock">
+          <label for="lock" class="m-label" id="label-lock">
+            <div class="m-label-text">Choose a lock</div>
           </label>
           {% for lock in locks %}
           <datalist id="locks">
@@ -34,18 +38,18 @@
           </datalist>
           {% endfor %}
         </div>
+      </div>
 
+      <div class="buttons-pane">
+        <button id="accept-form-button" type="submit">Update</button>
+        <button id="cancel-form-button" type="button">Cancel</button>
       </div>
     </form>
-    <div class="buttons-pane">
-      <button id="new">Create</button>
-      <button id="none">Cancel</button>
-    </div>
   </div>
 </div>
 
 <div class="wrap full-width">
-  <button class="btn btn-new no-select"><i class="bi bi-plus-lg"></i> Nuevo</button>
+  <button class="btn btn-new no-select" id="open-form-button"><i class="bi bi-plus-lg"></i> Nuevo</button>
   <table class="table">
     <thead class="thead">
       <tr class="tr">
@@ -60,8 +64,10 @@
         <td>{{ card.lock.id }}</td>
         <td>{{ card.created_at|date:'Y-m-d H:i:s' }}</td>
         <td>
-          <button class="btn btn-more btn-edit"><i class="bi bi-pencil-fill"></i></button>
-          <button class="btn btn-more btn-delete"><i class="bi bi-trash3-fill"></i></button>
+          <button class="btn btn-more btn-edit" onclick="location.href='{% url 'card_detail' uid=card.uid %}'"><i
+              class="bi bi-pencil-fill"></i></button>
+          <button class="btn btn-more btn-delete" onclick="location.href='{% url 'card_delete' uid=card.uid %}'"><i
+              class="bi bi-trash3-fill"></i></button>
         </td>
       </tr>
       {% endfor %}
@@ -70,17 +76,24 @@
 </div>
 
 <script>
-  $(".btn-new").click(function () {
-      $(".cover").css("display", "flex");
-    });
+  const openFormButton = document.getElementById('open-form-button');
+  const popupBackground = document.querySelector('.cover');
 
-  $("#none").click(function () {
-    $(".cover").css("display", "none");
-  });
+  const formAcceptButton = document.getElementById('accept-form-button');
+  const formCancelButton = document.getElementById('cancel-form-button');
 
   const uid = document.getElementById('uid');
   const createdAt = document.getElementById('createdAt');
   const lock = document.getElementById('lock');
+
+  openFormButton.addEventListener('click', () => {
+    formAcceptButton.innerText = 'Create';
+    popupBackground.style.display = 'flex';
+  });
+
+  formCancelButton.addEventListener('click', () => {
+    popupBackground.style.display = 'none';
+  });
 
   uid.addEventListener('input', () => {
     uid.setAttribute('value', uid.value);

@@ -2,7 +2,7 @@
 
 {% block content %}
 <div class="cover d-flex fx-center fy-center" {% if not query %}style="display: none" {% endif %}>
-  
+
   <div class="popup-dialog">
     <p class="title">New Card</p>
 
@@ -10,23 +10,23 @@
       {% csrf_token %}
 
       <div class="inner-form">
-        <div class="group">
+        <div class="m-group">
           <input class="m-input" id="uid" type="text" name="uid" value="{{ query.uid }}" aria-labelledby="label-uid">
           <label for="uid" class="m-label" id="label-uid">
             <div class="m-label-text">UID</div>
           </label>
         </div>
 
-        <div class="group">
+        <div class="m-group">
           <input class="m-input" id="created-at" type="datetime-local" name="created-at"
             value="{% if query %}{{ query.created_at|date:'Y-m-d' }}T{{ query.created_at|date:'H:i' }}{% else %}{% now 'Y-m-d' %}T{% now 'H:i' %}{% endif %}"
-            aria-labelledby="label-createdAt" disabled>
+            aria-labelledby="label-created-at" disabled>
           <label for="created-at" class="m-label" id="label-created-at">
             <div class="m-label-text">Created at</div>
           </label>
         </div>
 
-        <div class="group">
+        <div class="m-group">
           <input class="m-input" list="locks" id="lock" name="lock" value="{{ query.lock.id }}"
             aria-labelledby="label-lock">
           <label for="lock" class="m-label" id="label-lock">
@@ -38,31 +38,44 @@
           </datalist>
           {% endfor %}
         </div>
+
+        <div class="m-group">
+          <input class="m-input" id="due-date" type="datetime-local" name="due-date"
+            value="{% if query %}{{ query.due_date|date:'Y-m-d' }}T{{ query.due_date|date:'H:i' }}{% else %}{% now 'Y-m-d' %}T{% now 'H:i' %}{% endif %}"
+            aria-labelledby="label-due-date">
+          <label for="due-date" class="m-label" id="label-due-date">
+            <div class="m-label-text">Due date</div>
+          </label>
+        </div>
       </div>
 
       <div class="buttons-pane">
         <button id="accept-form-button" type="submit">Update</button>
-        <button id="cancel-form-button" type="button">Cancel</button>
+        <button id="cancel-form-button" type="reset">Cancel</button>
       </div>
     </form>
   </div>
 </div>
 
 <div class="wrap full-width">
-  <button class="btn btn-new no-select" id="open-form-button"><i class="bi bi-plus-lg"></i> Nuevo</button>
+  <button class="btn btn-new no-select" id="open-form-button"><i class="bi bi-plus-lg"></i> New</button>
   <table class="table">
     <thead class="thead">
       <tr class="tr">
+        <th class="no-select">UID</th>
         <th class="no-select">Lock</th>
         <th class="no-select">Created at</th>
+        <th class="no-select">Due date</th>
         <th class="no-select"><i class="bi bi-gear"></i></th>
       </tr>
     </thead>
     <tbody class="tbody">
       {% for card in cards %}
       <tr class="tr">
+        <td>{{ card.uid }}</td>
         <td>{{ card.lock.id }}</td>
         <td>{{ card.created_at|date:'Y-m-d H:i:s' }}</td>
+        <td>{{ card.due_date|date:'Y-m-d H:i:s' }}</td>
         <td>
           <button class="btn btn-more btn-edit" onclick="location.href='{% url 'card_detail' uid=card.uid %}'"><i
               class="bi bi-pencil-fill"></i></button>
@@ -83,12 +96,18 @@
   const formCancelButton = document.getElementById('cancel-form-button');
 
   const uid = document.getElementById('uid');
-  const createdAt = document.getElementById('createdAt');
+  const createdAt = document.getElementById('created-at');
+  const dueDate = document.getElementById('due-date');
   const lock = document.getElementById('lock');
 
   openFormButton.addEventListener('click', () => {
     formAcceptButton.innerText = 'Create';
     popupBackground.style.display = 'flex';
+
+    uid.setAttribute('value', '');
+    createdAt.setAttribute('value', datetime());
+    dueDate.setAttribute('value', datetime());
+    lock.setAttribute('value', '');
   });
 
   formCancelButton.addEventListener('click', () => {
@@ -103,8 +122,46 @@
     createdAt.setAttribute('value', createdAt.value);
   });
 
+  dueDate.addEventListener('input', () => {
+    dueDate.setAttribute('value', dueDate.value);
+  });
+
   lock.addEventListener('input', () => {
     lock.setAttribute('value', lock.value);
   });
+
+  // Replace "ws://your-websocket-server.com" with the actual URL of your server
+    const wsUri = "ws://172.16.20.250:8081";
+
+    // const output = document.getElementById("uid"); // Assuming you have an element with id="output"
+
+    function init() {
+      const ws = new WebSocket(wsUri);
+
+      ws.onopen = function (e) {
+        // output.innerHTML = "Connection established";
+      };
+
+      ws.onmessage = function (e) {
+        // const data = JSON.parse(e.data);
+        // Process the JSON data here
+        console.log("Received data:", e.data);
+        // You can further manipulate or display the data as needed
+        // output.innerHTML = "Received JSON: " +  e.data;// JSON.stringify(data, null, 2);
+        uid.setAttribute('value', e.data);
+      };
+
+      ws.onerror = function (e) {
+        console.error("WebSocket Error:", e);
+        // output.innerHTML = "Error connecting to server";
+      };
+
+      ws.onclose = function (e) {
+        console.log("WebSocket closed");
+        // output.innerHTML = "Connection closed";
+      };
+    }
+
+    window.addEventListener("load", init);
 </script>
 {% endblock content %}

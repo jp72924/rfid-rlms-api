@@ -1,7 +1,0 @@
-<h1>Lock Detail</h1>
-<p>ID: {{ lock.id }}</p>
-<p>Device ID: {{ lock.device.id }}</p>
-
-<br>
-<a href="{% url 'lock_update' id=lock.id %}">Edit Lock</a>
-<a href="{% url 'lock_delete' id=lock.id %}">Delete Lock</a>

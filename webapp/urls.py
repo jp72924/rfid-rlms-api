@@ -5,6 +5,8 @@ from webapp import views
 urlpatterns = [
   path('auth', views.auth, name='auth'),
   
+  path('booking', views.booking, name='booking'),
+
   path('card/list', views.card_list, name='card_list'),  # List all cards
   path('card/create', views.card_create, name='card_create'),  # Create a new card
   path('card/<str:uid>', views.card_detail, name='card_detail'),  # Detail view for a specific card

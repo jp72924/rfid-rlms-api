@@ -1,6 +1,9 @@
 from django.db import models
 from django.utils import timezone
 
+from datetime import datetime
+import pytz
+
 
 class Device(models.Model):
   id = models.CharField(max_length=255, primary_key=True)
@@ -14,9 +17,15 @@ class Lock(models.Model):
 class Card(models.Model):
   uid = models.CharField(max_length=255, primary_key=True)
   created_at = models.DateTimeField(default=timezone.now)
-  # due_date = models.DateTimeField(blank=True, null=True)
+  due_date = models.DateTimeField(blank=True, null=True)
   lock = models.ForeignKey(Lock, on_delete=models.CASCADE, null=True)
   # user = models.ForeignKey('User', on_delete=models.CASCADE)
+  
+  def is_overdue(self):
+    """
+    Checks if the current datetime is past the due_date of the model instance.
+    """
+    return datetime.now().astimezone(self.due_date.tzinfo) > self.due_date
 
 
 class User(models.Model):

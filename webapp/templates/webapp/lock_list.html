@@ -1,12 +1,100 @@
 {% extends 'webapp/base.html' %}
 
 {% block content %}
-<h1>List of Locks</h1>
-<ul>
-  {% for lock in locks %}
-    <li><a href="{% url 'lock_detail' id=lock.id %}">{{ lock.id }}</a></li>
-  {% endfor %}
-</ul>
-<br>
-<a href="{% url 'lock_create' %}">Create New Lock</a>
+<div class="cover d-flex fx-center fy-center" {% if not query %}style="display: none" {% endif %}>
+
+  <div class="popup-dialog">
+    <p class="title">New Lock</p>
+
+    <form action="{% url 'lock_create' %}" method="post">
+      {% csrf_token %}
+
+      <div class="inner-form">
+        <div class="m-group">
+          <input class="m-input" id="id" type="text" name="id" value="{{ query.id }}" aria-labelledby="label-id">
+          <label for="id" class="m-label" id="label-id">
+            <div class="m-label-text">ID</div>
+          </label>
+        </div>
+
+        <div class="m-group">
+          <input class="m-input" list="devices" id="device" name="device" value="{{ query.device.id }}"
+            aria-labelledby="label-device">
+          <label for="device" class="m-label" id="label-device">
+            <div class="m-label-text">Choose a device</div>
+          </label>
+          {% for device in devices %}
+          <datalist id="devices">
+            <option value="{{ device.id }}"></option>
+          </datalist>
+          {% endfor %}
+        </div>
+
+      </div>
+
+      <div class="buttons-pane">
+        <button id="accept-form-button" type="submit">Update</button>
+        <button id="cancel-form-button" type="reset">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="wrap full-width">
+  <button class="btn btn-new no-select" id="open-form-button"><i class="bi bi-plus-lg"></i> New</button>
+  <table class="table">
+    <thead class="thead">
+      <tr class="tr">
+        <th class="no-select">ID</th>
+        <th class="no-select">Device</th>
+        <th class="no-select"><i class="bi bi-gear"></i></th>
+      </tr>
+    </thead>
+    <tbody class="tbody">
+      {% for lock in locks %}
+      <tr class="tr">
+        <td>{{ lock.id }}</td>
+        <td>{{ lock.device.id }}</td>
+        <td>
+          <button class="btn btn-more btn-edit" onclick="location.href='{% url 'lock_detail' id=lock.id %}'"><i
+              class="bi bi-pencil-fill"></i></button>
+          <button class="btn btn-more btn-delete" onclick="location.href='{% url 'lock_delete' id=lock.id %}'"><i
+              class="bi bi-trash3-fill"></i></button>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<script>
+  const openFormButton = document.getElementById('open-form-button');
+  const popupBackground = document.querySelector('.cover');
+
+  const formAcceptButton = document.getElementById('accept-form-button');
+  const formCancelButton = document.getElementById('cancel-form-button');
+
+  const id = document.getElementById('id');
+  const device = document.getElementById('device');
+
+  openFormButton.addEventListener('click', () => {
+    formAcceptButton.innerText = 'Create';
+    popupBackground.style.display = 'flex';
+
+    id.setAttribute('value', '');
+    device.setAttribute('value', '');
+  });
+
+  formCancelButton.addEventListener('click', () => {
+    popupBackground.style.display = 'none';
+  });
+
+  id.addEventListener('input', () => {
+    id.setAttribute('value', id.value);
+  });
+
+  device.addEventListener('input', () => {
+    device.setAttribute('value', device.value);
+  });
+</script>
 {% endblock content %}

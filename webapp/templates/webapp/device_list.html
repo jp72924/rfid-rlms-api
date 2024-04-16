@@ -1,8 +1,78 @@
-<h1>List of Devices</h1>
-<ul>
-  {% for device in devices %}
-    <li><a href="{% url 'device_detail' id=device.id %}">{{ device.id }}</a></li>
-  {% endfor %}
-</ul>
-<br>
-<a href="{% url 'device_create' %}">Create New Device</a>
+{% extends 'webapp/base.html' %}
+
+{% block content %}
+<div class="cover d-flex fx-center fy-center" {% if not query %}style="display: none" {% endif %}>
+
+  <div class="popup-dialog">
+    <p class="title">New Device</p>
+
+    <form action="{% url 'device_create' %}" method="post">
+      {% csrf_token %}
+
+      <div class="inner-form">
+        <div class="m-group">
+          <input class="m-input" id="id" type="text" name="id" value="{{ query.id }}" aria-labelledby="label-id">
+          <label for="id" class="m-label" id="label-id">
+            <div class="m-label-text">ID</div>
+          </label>
+        </div>
+      </div>
+
+      <div class="buttons-pane">
+        <button id="accept-form-button" type="submit">Update</button>
+        <button id="cancel-form-button" type="reset">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="wrap full-width">
+  <button class="btn btn-new no-select" id="open-form-button"><i class="bi bi-plus-lg"></i> New</button>
+  <table class="table">
+    <thead class="thead">
+      <tr class="tr">
+        <th class="no-select">ID</th>
+        <th class="no-select"><i class="bi bi-gear"></i></th>
+      </tr>
+    </thead>
+    <tbody class="tbody">
+      {% for device in devices %}
+      <tr class="tr">
+        <td>{{ device.id }}</td>
+        <td>
+          <button class="btn btn-more btn-edit" onclick="location.href='{% url 'device_detail' id=device.id %}'"><i
+              class="bi bi-pencil-fill"></i></button>
+          <button class="btn btn-more btn-delete" onclick="location.href='{% url 'device_delete' id=device.id %}'"><i
+              class="bi bi-trash3-fill"></i></button>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<script>
+  const openFormButton = document.getElementById('open-form-button');
+  const popupBackground = document.querySelector('.cover');
+
+  const formAcceptButton = document.getElementById('accept-form-button');
+  const formCancelButton = document.getElementById('cancel-form-button');
+
+  const id = document.getElementById('id');
+
+  openFormButton.addEventListener('click', () => {
+    formAcceptButton.innerText = 'Create';
+    popupBackground.style.display = 'flex';
+
+    id.setAttribute('value', '');
+  });
+
+  formCancelButton.addEventListener('click', () => {
+    popupBackground.style.display = 'none';
+  });
+
+  id.addEventListener('input', () => {
+    id.setAttribute('value', id.value);
+  });
+</script>
+{% endblock content %}

@@ -2,14 +2,17 @@
 
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>{% block title %}{{ project_name }}{% endblock title %}</title>
 
     <!-- Google Fonts: Montserrat and Poppins -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
-    
+    <link
+        href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+        rel="stylesheet">
+
     <!-- Bootstrap Icons 1.11.3 -->
     <link rel="stylesheet" href="{% static 'css/bootstrap-icons.min.css' %}">
 
@@ -30,35 +33,50 @@
 
     <!-- DataTables 2.0.3 -->
     <script src="{% static 'js/datatables.min.js' %}"></script>
+
+    <!-- Custom Scripts -->
+    <script src="{% static 'js/utils.js' %}"></script>
 </head>
+
 <body>
     <div class="layout d-flex">
         <div class="sidebar">
             <div class="inner-sidebar d-flex">
 
-            <div class="item d-flex fx-center fy-center no-select {% if view == 'cards' %}active{% endif %}">
-                <a href="{% url 'card_list' %}" class="text-center"><i class="bi bi-credit-card-fill"></i><span class="item-tag">Cards</span></a>
-            </div>
+                <div class="item d-flex fx-center fy-center no-select {% if view == 'booking' %}active{% endif %}">
+                    <a href="{% url 'booking' %}" class="full-width text-center"><i
+                            class="bi bi-building-fill"></i><span class="item-tag">Bookings</span></a>
+                </div>
 
-            <div class="item d-flex fx-center fy-center no-select {% if view == 'locks' %}active{% endif %}">
-                <a href="{% url 'lock_list' %}" class="text-center"><i class="bi bi-door-closed-fill"></i><span class="item-tag">Locks</span></a>
-            </div>
+                <div class="item d-flex fx-center fy-center no-select {% if view == 'cards' %}active{% endif %}">
+                    <a href="{% url 'card_list' %}" class="full-width text-center"><i
+                            class="bi bi-credit-card-fill"></i><span class="item-tag">Cards</span></a>
+                </div>
 
-            <div class="item d-flex fx-center fy-center no-select {% if view == 'devices' %}active{% endif %}">
-                <a href="{% url 'device_list' %}" class="text-center"><i class="bi bi-wifi"></i><span class="item-tag">Devices</span></a>
-            </div>
+                <div class="item d-flex fx-center fy-center no-select {% if view == 'locks' %}active{% endif %}">
+                    <a href="{% url 'lock_list' %}" class="full-width text-center"><i
+                            class="bi bi-door-closed-fill"></i><span class="item-tag">Locks</span></a>
+                </div>
 
-            <div class="item d-flex fx-center fy-center no-select {% if view == 'users' %}active{% endif %}">
-                <a href="" class="text-center"><i class="bi bi-person-fill"></i><span class="item-tag">User</span></a>
-            </div>
+                <div class="item d-flex fx-center fy-center no-select {% if view == 'devices' %}active{% endif %}">
+                    <a href="{% url 'device_list' %}" class="full-width text-center"><i class="bi bi-wifi"></i><span
+                            class="item-tag">Devices</span></a>
+                </div>
 
-            <div class="item d-flex fx-center fy-center no-select {% if view == 'groups' %}active{% endif %}">
-                <a href="" class="text-center"><i class="bi bi-people-fill"></i><span class="item-tag">Groups</span></a>
-            </div>
+                <div class="item d-flex fx-center fy-center no-select {% if view == 'users' %}active{% endif %}">
+                    <a href="" class="full-width text-center"><i class="bi bi-person-fill"></i><span
+                            class="item-tag">User</span></a>
+                </div>
 
-            <div class="item d-flex fx-center fy-center no-select {% if view == 'logs' %}active{% endif %}">
-                <a href="" class="text-center"><i class="bi bi-file-earmark-text-fill"></i><span class="item-tag">Logs</span></a>
-            </div>
+                <div class="item d-flex fx-center fy-center no-select {% if view == 'groups' %}active{% endif %}">
+                    <a href="" class="full-width text-center"><i class="bi bi-people-fill"></i><span
+                            class="item-tag">Groups</span></a>
+                </div>
+
+                <div class="item d-flex fx-center fy-center no-select {% if view == 'logs' %}active{% endif %}">
+                    <a href="" class="full-width text-center"><i class="bi bi-file-earmark-text-fill"></i><span
+                            class="item-tag">Logs</span></a>
+                </div>
 
             </div>
         </div>
@@ -70,5 +88,5 @@
     <!-- Custom Scripts -->
     <script src="{% static 'js/main.js' %}"></script>
 </body>
-</html>
 
+</html>

@@ -40,6 +40,19 @@
         </div>
 
         <div class="m-group">
+          <input class="m-input" list="users" id="user" name="user" value="{{ query.user.id }}"
+            aria-labelledby="label-user">
+          <label for="user" class="m-label" id="label-user">
+            <div class="m-label-text">Choose a user</div>
+          </label>
+          {% for user in users %}
+          <datalist id="users">
+            <option value="{{ user.id }}"></option>
+          </datalist>
+          {% endfor %}
+        </div>
+
+        <div class="m-group">
           <input class="m-input" id="due-date" type="datetime-local" name="due-date"
             value="{% if query %}{{ query.due_date|date:'Y-m-d' }}T{{ query.due_date|date:'H:i' }}{% else %}{% now 'Y-m-d' %}T{% now 'H:i' %}{% endif %}"
             aria-labelledby="label-due-date">
@@ -66,6 +79,7 @@
         <th class="no-select">Lock</th>
         <th class="no-select">Created at</th>
         <th class="no-select">Due date</th>
+        <th class="no-select">User</th>
         <th class="no-select"><i class="bi bi-gear"></i></th>
       </tr>
     </thead>
@@ -76,6 +90,7 @@
         <td>{{ card.lock.id }}</td>
         <td>{{ card.created_at|date:'Y-m-d H:i:s' }}</td>
         <td>{{ card.due_date|date:'Y-m-d H:i:s' }}</td>
+        <td>{{ card.user.username }}</td>
         <td>
           <button class="btn btn-more btn-edit" onclick="location.href='{% url 'card_detail' uid=card.uid %}'"><i
               class="bi bi-pencil-fill"></i></button>
@@ -99,6 +114,7 @@
   const createdAt = document.getElementById('created-at');
   const dueDate = document.getElementById('due-date');
   const lock = document.getElementById('lock');
+  const user = document.getElementById('user');
 
   openFormButton.addEventListener('click', () => {
     formAcceptButton.innerText = 'Create';
@@ -129,6 +145,11 @@
   lock.addEventListener('input', () => {
     lock.setAttribute('value', lock.value);
   });
+
+  user.addEventListener('input', () => {
+    user.setAttribute('value', user.value);
+  });
+
 
   // Replace "ws://your-websocket-server.com" with the actual URL of your server
     const wsUri = "ws://172.16.20.250:8081";

@@ -18,6 +18,13 @@
         </div>
 
         <div class="m-group">
+          <input class="m-input" id="auth" type="text" name="auth" value="{{ query.min_auth }}" aria-labelledby="label-auth">
+          <label for="auth" class="m-label" id="label-auth">
+            <div class="m-label-text">Min. Auth</div>
+          </label>
+        </div>
+
+        <div class="m-group">
           <input class="m-input" list="devices" id="device" name="device" value="{{ query.device.id }}"
             aria-labelledby="label-device">
           <label for="device" class="m-label" id="label-device">
@@ -46,6 +53,7 @@
     <thead class="thead">
       <tr class="tr">
         <th class="no-select">ID</th>
+        <th class="no-select">Min. Auth</th>
         <th class="no-select">Device</th>
         <th class="no-select"><i class="bi bi-gear"></i></th>
       </tr>
@@ -54,6 +62,7 @@
       {% for lock in locks %}
       <tr class="tr">
         <td>{{ lock.id }}</td>
+        <td>{{ lock.min_auth }}</td>
         <td>{{ lock.device.id }}</td>
         <td>
           <button class="btn btn-more btn-edit" onclick="location.href='{% url 'lock_detail' id=lock.id %}'"><i
@@ -75,6 +84,7 @@
   const formCancelButton = document.getElementById('cancel-form-button');
 
   const id = document.getElementById('id');
+  const minAuth = document.getElementById('auth');
   const device = document.getElementById('device');
 
   openFormButton.addEventListener('click', () => {
@@ -91,6 +101,10 @@
 
   id.addEventListener('input', () => {
     id.setAttribute('value', id.value);
+  });
+
+  minAuth.addEventListener('input', () => {
+    minAuth.setAttribute('value', minAuth.value);
   });
 
   device.addEventListener('input', () => {

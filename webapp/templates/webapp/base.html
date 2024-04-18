@@ -64,12 +64,12 @@
                 </div>
 
                 <div class="item d-flex fx-center fy-center no-select {% if view == 'users' %}active{% endif %}">
-                    <a href="" class="full-width text-center"><i class="bi bi-person-fill"></i><span
+                    <a href="{% url 'user_list' %}" class="full-width text-center"><i class="bi bi-person-fill"></i><span
                             class="item-tag">User</span></a>
                 </div>
 
                 <div class="item d-flex fx-center fy-center no-select {% if view == 'groups' %}active{% endif %}">
-                    <a href="" class="full-width text-center"><i class="bi bi-people-fill"></i><span
+                    <a href="{% url 'group_list' %}" class="full-width text-center"><i class="bi bi-people-fill"></i><span
                             class="item-tag">Groups</span></a>
                 </div>
 

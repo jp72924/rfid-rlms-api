@@ -1,0 +1,163 @@
+{% extends 'webapp/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="cover d-flex fx-center fy-center">
+
+  <div class="popup-dialog">
+    <p class="title">New Card</p>
+
+    <div class="image-container text-center">
+      <img src="{% static 'img/card.png' %}" alt="" width="30%">
+    </div>
+
+    <p id="output" class="title text-center">Hold the card</p>
+
+    <form action="{% url 'card_create' %}" method="post">
+      {% csrf_token %}
+
+      <div class="inner-form">
+        <input id="uid" type="hidden" name="uid" value="">
+
+        <div class="m-group">
+          <input class="m-input" id="created-at" type="datetime-local" name="created-at"
+            value="{% if query %}{{ query.created_at|date:'Y-m-d' }}T{{ query.created_at|date:'H:i' }}{% else %}{% now 'Y-m-d' %}T{% now 'H:i' %}{% endif %}"
+            aria-labelledby="label-created-at" disabled>
+          <label for="created-at" class="m-label" id="label-created-at">
+            <div class="m-label-text">Created at</div>
+          </label>
+        </div>
+
+        <div class="m-group">
+          <input class="m-input" list="locks" id="lock" name="lock" value="{{ query.lock.id }}"
+            aria-labelledby="label-lock">
+          <label for="lock" class="m-label" id="label-lock">
+            <div class="m-label-text">Choose a lock</div>
+          </label>
+          <datalist id="locks">
+            {% for lock in locks %}
+            <option value="{{ lock.id }}"></option>
+            {% endfor %}
+          </datalist>
+        </div>
+
+        <div class="m-group">
+          <input class="m-input" id="due-date" type="datetime-local" name="due-date"
+            value="{% if query %}{{ query.due_date|date:'Y-m-d' }}T{{ query.due_date|date:'H:i' }}{% else %}{% now 'Y-m-d' %}T{% now 'H:i' %}{% endif %}"
+            aria-labelledby="label-due-date">
+          <label for="due-date" class="m-label" id="label-due-date">
+            <div class="m-label-text">Due date</div>
+          </label>
+        </div>
+      </div>
+
+      <div class="buttons-pane">
+        <button id="accept-form-button" type="submit">Update</button>
+        <button id="cancel-form-button" type="reset">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="wrap full-width">
+  <button class="btn btn-new no-select" id="open-form-button"><i class="bi bi-plus-lg"></i> New</button>
+  <table class="table">
+    <thead class="thead">
+      <tr class="tr">
+        <th class="no-select">Lock</th>
+        <th class="no-select">Created at</th>
+        <th class="no-select">Due date</th>
+        <th class="no-select"><i class="bi bi-gear"></i></th>
+      </tr>
+    </thead>
+    <tbody class="tbody">
+      {% for card in cards %}
+      <tr class="tr">
+        <td>{{ card.lock.id }}</td>
+        <td>{{ card.created_at|date:'Y-m-d H:i:s' }}</td>
+        <td>{{ card.due_date|date:'Y-m-d H:i:s' }}</td>
+        <td>
+          <button class="btn btn-more btn-edit" onclick="location.href='{% url 'card_detail' uid=card.uid %}'"><i
+              class="bi bi-pencil-fill"></i></button>
+          <button class="btn btn-more btn-delete" onclick="location.href='{% url 'card_delete' uid=card.uid %}'"><i
+              class="bi bi-trash3-fill"></i></button>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<script>
+  const openFormButton = document.getElementById('open-form-button');
+  const popupBackground = document.querySelector('.cover');
+
+  const formAcceptButton = document.getElementById('accept-form-button');
+  const formCancelButton = document.getElementById('cancel-form-button');
+
+  const uid = document.getElementById('uid');
+  const createdAt = document.getElementById('created-at');
+  const dueDate = document.getElementById('due-date');
+  const lock = document.getElementById('lock');
+
+  openFormButton.addEventListener('click', () => {
+    formAcceptButton.innerText = 'Create';
+    popupBackground.style.display = 'flex';
+
+    uid.setAttribute('value', '');
+    createdAt.setAttribute('value', datetime());
+    dueDate.setAttribute('value', datetime());
+    lock.setAttribute('value', '');
+  });
+
+  formCancelButton.addEventListener('click', () => {
+    popupBackground.style.display = 'none';
+  });
+
+  createdAt.addEventListener('input', () => {
+    createdAt.setAttribute('value', createdAt.value);
+  });
+
+  dueDate.addEventListener('input', () => {
+    dueDate.setAttribute('value', dueDate.value);
+  });
+
+  lock.addEventListener('input', () => {
+    lock.setAttribute('value', lock.value);
+  });
+
+  // Replace "ws://your-websocket-server.com" with the actual URL of your server
+    const wsUri = "ws://172.16.20.250:8081";
+
+    const output = document.getElementById("output"); // Assuming you have an element with id="output"
+
+    function init() {
+      const ws = new WebSocket(wsUri);
+
+      ws.onopen = function (e) {
+        // output.innerHTML = "Connection established";
+      };
+
+      ws.onmessage = function (e) {
+        // const data = JSON.parse(e.data);
+        // Process the JSON data here
+        console.log("Received data:", e.data);
+        // You can further manipulate or display the data as needed
+        output.innerHTML = "Remove the card";// JSON.stringify(data, null, 2);
+        uid.setAttribute('value', e.data.trim());
+      };
+
+      ws.onerror = function (e) {
+        console.error("WebSocket Error:", e);
+        // output.innerHTML = "Error connecting to server";
+      };
+
+      ws.onclose = function (e) {
+        console.log("WebSocket closed");
+        // output.innerHTML = "Connection closed";
+      };
+    }
+
+    window.addEventListener("load", init);
+</script>
+{% endblock content %}

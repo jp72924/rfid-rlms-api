@@ -1,0 +1,54 @@
+.btn-more {
+    background-color: #fff !important;
+    width: 2rem;
+    height: 2rem;
+    border: none;
+
+    background-color: inherit;
+    border-radius: 50%;
+    cursor: pointer;
+
+    transition: all 0.3s ease;
+
+    box-shadow: var(--soft-shadow);
+}
+
+.btn-edit {
+    color: var(--color-dark-blue) !important;
+}
+
+.btn-edit:hover {
+    background-color: var(--color-dark-blue) !important;
+    color: #fff !important;
+}
+
+.btn-delete {
+    color: var(--color-red) !important;
+}
+
+.btn-delete:hover {
+    background-color: var(--color-red) !important;
+    color: #fff !important;
+}
+
+table tr {
+    height: 3rem;
+}
+
+thead th {
+    border-bottom: 2px solid var(--color-blue) !important;
+
+    color: var(--color-blue);
+    font-size: 0.9rem;
+    text-align: left;
+}
+
+tbody tr:hover {
+    background-color: var(--color-light-blue) !important;
+    color: var(--color-dark-blue);
+}
+
+th:last-child,
+td:last-child {
+    text-align: center;
+}

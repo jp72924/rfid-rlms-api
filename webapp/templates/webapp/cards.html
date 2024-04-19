@@ -32,11 +32,11 @@
           <label for="lock" class="m-label" id="label-lock">
             <div class="m-label-text">Choose a lock</div>
           </label>
-          {% for lock in locks %}
           <datalist id="locks">
+            {% for lock in locks %}
             <option value="{{ lock.id }}"></option>
+            {% endfor %}
           </datalist>
-          {% endfor %}
         </div>
 
         <div class="m-group">
@@ -45,11 +45,11 @@
           <label for="user" class="m-label" id="label-user">
             <div class="m-label-text">Choose a user</div>
           </label>
-          {% for user in users %}
           <datalist id="users">
+            {% for user in users %}
             <option value="{{ user.id }}"></option>
+            {% endfor %}
           </datalist>
-          {% endfor %}
         </div>
 
         <div class="m-group">

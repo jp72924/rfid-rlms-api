@@ -1,9 +1,6 @@
 from django.db import models
 from django.utils import timezone
 
-from datetime import datetime
-import pytz
-
 
 class Device(models.Model):
   id = models.CharField(max_length=255, primary_key=True)
@@ -17,7 +14,7 @@ class Lock(models.Model):
 
 class Card(models.Model):
   uid = models.CharField(max_length=255, primary_key=True)
-  created_at = models.DateTimeField(default=timezone.now)
+  created_at = models.DateTimeField(auto_now_add=True)
   due_date = models.DateTimeField(blank=True, null=True)
   lock = models.ForeignKey(Lock, on_delete=models.CASCADE, null=True)
   user = models.ForeignKey('User', on_delete=models.CASCADE, null=True)
@@ -26,23 +23,23 @@ class Card(models.Model):
     """
     Checks if the current datetime is past the due_date of the model instance.
     """
-    return datetime.now().astimezone(self.due_date.tzinfo) > self.due_date
+    return timezone.now() > self.due_date # datetime.now().astimezone(self.due_date.tzinfo) > self.due_date
 
 
 class User(models.Model):
-  id = models.IntegerField(primary_key=True)
+  id = models.AutoField(primary_key=True)
   username = models.CharField(max_length=255)
   group = models.ForeignKey('Group', on_delete=models.CASCADE)
 
 
 class Group(models.Model):
-  id = models.IntegerField(primary_key=True)
-  name = models.CharField(max_length=255)
+  id = models.AutoField(primary_key=True)
+  name = models.CharField(max_length=255, unique=True)
   authority = models.IntegerField(blank=True, null=True)
 
 
 class Record(models.Model):
-  timestamp = models.DateTimeField(default=timezone.now)
+  timestamp = models.DateTimeField(auto_now_add=True)
   level = models.CharField(max_length=50, choices=[
       ('debug', 'Debug'),
       ('info', 'Info'),

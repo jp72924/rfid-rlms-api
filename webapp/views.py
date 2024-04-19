@@ -35,17 +35,22 @@ def index(request):
 def auth(request):
   card_uid = request.GET.get('uid')
   device_id = request.GET.get('dev')
+  lock_status = int(request.GET.get('status'))
   
   authorized = 0
   
   try:
     card = Card.objects.get(uid=card_uid)
     authorized = int(device_id == card.lock.device.id and not card.is_overdue() and card.user.group.authority >= card.lock.min_auth) # type: ignore
+    if lock_status and card.user.group.authority < 3:
+       authorized = 2
   except Card.DoesNotExist:
     pass
   
-  if authorized:
+  if authorized == 1:
     print('AUTHORIZED')
+  elif authorized == 2:
+    print('DO NOT DISTURB')
   else:
     print('NOT AUTHORIZED')
   
@@ -55,13 +60,13 @@ def auth(request):
   
   return JsonResponse(data)
 
+
 def booking(request):
   view = 'booking'
   cards = Card.objects.all()
   locks = Lock.objects.all()
   context = {'view': view, 'cards': cards, 'locks': locks}
   return render(request, 'webapp/booking.html', context)
-
 
 # Cards
 
@@ -71,7 +76,7 @@ def card_list(request):
   locks = Lock.objects.all()
   users = User.objects.all()
   context = {'view': view, 'cards': cards, 'locks': locks, 'users': users}
-  return render(request, 'webapp/card_list.html', context)
+  return render(request, 'webapp/cards.html', context)
 
 
 def card_detail(request, uid):
@@ -83,8 +88,8 @@ def card_detail(request, uid):
     card = Card.objects.get(uid=uid)
   except Card.DoesNotExist:
     raise Http404("Card Not Found")
-  context = {'view': view, 'cards': cards, 'locks': locks, 'users': users}
-  return render(request, 'webapp/card_list.html', context)
+  context = {'view': view, 'cards': cards, 'locks': locks, 'users': users, 'query': card}
+  return render(request, 'webapp/cards.html', context)
 
 
 def card_create(request):  
@@ -127,7 +132,7 @@ def device_list(request):
   view = 'devices'
   devices = Device.objects.all()
   context = {'view': view, 'devices': devices}
-  return render(request, 'webapp/device_list.html', context)
+  return render(request, 'webapp/devices.html', context)
 
 
 def device_detail(request, id):
@@ -138,7 +143,7 @@ def device_detail(request, id):
   except Device.DoesNotExist:
     raise Http404("Device Not Found")
   context = {'view': view, 'devices': devices, 'query': device}
-  return render(request, 'webapp/device_list.html', context)
+  return render(request, 'webapp/devices.html', context)
 
 
 def device_create(request):
@@ -194,12 +199,11 @@ def group_detail(request, id):
 
 def group_create(request):  
   if request.method == 'POST':
-    group_id = request.POST.get('id')
     group_name = request.POST.get('name')
     group_authority = request.POST.get('authority')
-    if group_id:
-      group = Group(id=group_id, name=group_name, authority=group_authority)
-      group.save()
+
+    group = Group(name=group_name, authority=group_authority)
+    group.save()
   return redirect('group_list')
 
 
@@ -209,15 +213,13 @@ def group_update(request, id):
   except Group.DoesNotExist:
     raise Http404("Group Not Found")
   if request.method == 'POST':
-    group_id = request.POST.get('id')
     group_name = request.POST.get('name')
     group_authority = request.POST.get('authority')
-    if group_id:
-      group.id = group_id
-      group.name = group_name
-      group.authority = group_authority
-      group.save()
-      return redirect('group_detail', id=group.id)
+
+    group.name = group_name
+    group.authority = group_authority
+    group.save()
+    return redirect('group_detail', id=group.id)
   return redirect('group_list')
 
 
@@ -236,7 +238,7 @@ def lock_list(request):
   locks = Lock.objects.all()
   devices = Device.objects.all()
   context = {'view': view, 'locks': locks, 'devices': devices}
-  return render(request, 'webapp/lock_list.html', context)
+  return render(request, 'webapp/locks.html', context)
 
 
 def lock_detail(request, id):
@@ -248,7 +250,7 @@ def lock_detail(request, id):
   except Lock.DoesNotExist:
     raise Http404("Lock Not Found")
   context = {'view': view, 'locks': locks, 'devices': devices, 'query': lock}
-  return render(request, 'webapp/lock_list.html', context)
+  return render(request, 'webapp/locks.html', context)
 
 
 def lock_create(request):  

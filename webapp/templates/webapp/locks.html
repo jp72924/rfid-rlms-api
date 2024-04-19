@@ -30,11 +30,11 @@
           <label for="device" class="m-label" id="label-device">
             <div class="m-label-text">Choose a device</div>
           </label>
-          {% for device in devices %}
           <datalist id="devices">
+            {% for device in devices %}
             <option value="{{ device.id }}"></option>
+            {% endfor %}
           </datalist>
-          {% endfor %}
         </div>
 
       </div>

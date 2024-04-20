@@ -32,33 +32,48 @@ def index(request):
   return HttpResponse("Hello, world. You're at the polls index.")
   
   
-def auth(request):
+def authorize(request):
+  """
+  This function checks user access based on card UID, device ID, and lock status.
+
+  Args:
+      request: A Django HttpRequest object containing query parameters.
+
+  Returns:
+      A Django JsonResponse object with the authorization status.
+  """
+
+  # Extract data from request parameters
   card_uid = request.GET.get('uid')
   device_id = request.GET.get('dev')
-  lock_status = int(request.GET.get('status'))
-  
-  authorized = 0
-  
+  lock_status = int(request.GET.get('status', 0))  # Default lock status to 0
+
+  # Try to retrieve card object
   try:
     card = Card.objects.get(uid=card_uid)
-    authorized = int(device_id == card.lock.device.id and not card.is_overdue() and card.user.group.authority >= card.lock.min_auth) # type: ignore
-    if lock_status and card.user.group.authority < 3:
-       authorized = 2
   except Card.DoesNotExist:
-    pass
-  
-  if authorized == 1:
-    print('AUTHORIZED')
-  elif authorized == 2:
-    print('DO NOT DISTURB')
-  else:
-    print('NOT AUTHORIZED')
-  
-  data = {
-    "status": authorized
-  }
-  
-  return JsonResponse(data)
+    return JsonResponse({"status": 0})  # Not authorized (card not found)
+
+  # Check authorization conditions
+  authorized = check_authorization(card, device_id, lock_status)
+
+  # Prepare response based on authorization status
+  response_message = {
+      1: "AUTHORIZED",
+      2: "DO NOT DISTURB",
+      0: "NOT AUTHORIZED"
+  }[authorized]
+
+  return JsonResponse({"status": authorized, "message": response_message})
+
+# Helper function to check authentication logic
+def check_authorization(card, device_id, lock_status):
+  return int(
+      device_id == card.lock.device.id and
+      not card.is_overdue() and
+      card.user.group.authority >= card.lock.min_auth and
+      (not lock_status or card.user.group.authority >= 3)
+  )
 
 
 def booking(request):

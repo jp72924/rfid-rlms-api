@@ -44,13 +44,13 @@ def authorize(request):
   """
 
   # Extract data from request parameters
-  card_uid = request.GET.get('uid')
+  card_uuid = request.GET.get('uuid')
   device_id = request.GET.get('dev')
   lock_status = int(request.GET.get('status', 0))  # Default lock status to 0
 
   # Try to retrieve card object
   try:
-    card = Card.objects.get(uid=card_uid)
+    card = Card.objects.get(uuid=card_uuid)
   except Card.DoesNotExist:
     return JsonResponse({"status": 0})  # Not authorized (card not found)
 
@@ -66,14 +66,12 @@ def authorize(request):
 
   return JsonResponse({"status": authorized, "message": response_message})
 
-# Helper function to check authentication logic
+# Helper function to check authorization logic
 def check_authorization(card, device_id, lock_status):
   return int(
-      device_id == card.lock.device.id and
+      device_id == card.lock.device.chip_id and
       not card.is_overdue() and
-      card.user.group.authority >= card.lock.min_auth and
-      (not lock_status or card.user.group.authority >= 3)
-  )
+      card.user.group.authority >= card.lock.min_auth) + int(lock_status and card.user.group.authority < 3)
 
 
 def booking(request):
@@ -94,13 +92,13 @@ def card_list(request):
   return render(request, 'webapp/cards.html', context)
 
 
-def card_detail(request, uid):
+def card_detail(request, uuid):
   view = 'cards'
   cards = Card.objects.all()
   locks = Lock.objects.all()
   users = User.objects.all()
   try:
-    card = Card.objects.get(uid=uid)
+    card = Card.objects.get(uuid=uuid)
   except Card.DoesNotExist:
     raise Http404("Card Not Found")
   context = {'view': view, 'cards': cards, 'locks': locks, 'users': users, 'query': card}
@@ -109,33 +107,39 @@ def card_detail(request, uid):
 
 def card_create(request):  
   if request.method == 'POST':
-    card_uid = request.POST.get('uid')
-    card_lock = Lock(id=request.POST.get('lock'))
+    card_uuid = request.POST.get('uuid')
+    card_lock = Lock.objects.get(name=request.POST.get('lock'))
     card_due_date = convert_to_django_date(request.POST.get('due-date'))
-    card_user = User(id=request.POST.get('user'))
-    if card_uid:
-      card = Card(uid=card_uid, lock=card_lock, due_date=card_due_date, user=card_user)
-      card.save()
+    card_user = User.objects.get(username=request.POST.get('user'))
+
+    card = Card(uuid=card_uuid, lock=card_lock, due_date=card_due_date, user=card_user)
+    card.save()
   return redirect('card_list')
 
 
-def card_update(request, uid):
+def card_update(request, uuid):
   try:
-    card = Card.objects.get(uid=uid)
+    card = Card.objects.get(uuid=uuid)
   except Card.DoesNotExist:
     raise Http404("Card Not Found")
   if request.method == 'POST':
-    card_uid = request.POST.get('uid')
-    if card_uid:
-      card.uid = card_uid
-      card.save()
-      return redirect('card_detail', uid=card.uid)
+    card_uuid = request.POST.get('uuid')
+    card_lock = Lock.objects.get(name=request.POST.get('lock'))
+    card_due_date = convert_to_django_date(request.POST.get('due-date'))
+    card_user = User.objects.get(username=request.POST.get('user'))
+
+    card.uuid = card_uuid
+    card.lock = card_lock
+    card.due_date = card_due_date
+    card.user = card_user
+    card.save()
+    return redirect('card_detail', uuid=card.uuid)
   return redirect('card_list')
 
 
-def card_delete(request, uid):
+def card_delete(request, uuid):
   try:
-    card = Card.objects.get(uid=uid)
+    card = Card.objects.get(uuid=uuid)
   except Card.DoesNotExist:
     raise Http404("Card Not Found")
   card.delete()
@@ -154,7 +158,7 @@ def device_detail(request, id):
   view = 'devices'
   devices = Device.objects.all()
   try:
-    device = Device.objects.get(id=id)
+    device = Device.objects.get(chip_id=id)
   except Device.DoesNotExist:
     raise Http404("Device Not Found")
   context = {'view': view, 'devices': devices, 'query': device}
@@ -163,30 +167,30 @@ def device_detail(request, id):
 
 def device_create(request):
   if request.method == 'POST':
-    device_id = request.POST.get('id')
-    if device_id:
-      device = Device(id=device_id)
-      device.save()
+    device_chip = request.POST.get('id')
+
+    device = Device(chip_id=device_chip)
+    device.save()
   return redirect('device_list')
 
 
 def device_update(request, id):
   try:
-    device = Device.objects.get(id=id)
+    device = Device.objects.get(chip_id=id)
   except Device.DoesNotExist:
     raise Http404("Device Not Found")
   if request.method == 'POST':
-    device_id = request.POST.get('id')
-    if device_id:
-      device.id = device_id
-      device.save()
-      return redirect('device_detail', id=device.id)
+    device_chip = request.POST.get('id')
+
+    device.chip_id = device_chip
+    device.save()
+    return redirect('device_detail', id=device.chip_id)
   return redirect('device_list')
 
 
 def device_delete(request, id):
   try:
-    device = Device.objects.get(id=id)
+    device = Device.objects.get(chip_id=id)
   except Device.DoesNotExist:
     raise Http404("Device Not Found")
   device.delete()
@@ -201,11 +205,11 @@ def group_list(request):
   return render(request, 'webapp/groups.html', context)
 
 
-def group_detail(request, id):
+def group_detail(request, name):
   view = 'groups'
   groups = Group.objects.all()
   try:
-    group = Group.objects.get(id=id)
+    group = Group.objects.get(name=name)
   except Group.DoesNotExist:
     raise Http404("Group Not Found")
   context = {'view': view, 'groups': groups, 'query': group}
@@ -222,9 +226,9 @@ def group_create(request):
   return redirect('group_list')
 
 
-def group_update(request, id):
+def group_update(request, name):
   try:
-    group = Group.objects.get(id=id)
+    group = Group.objects.get(name=name)
   except Group.DoesNotExist:
     raise Http404("Group Not Found")
   if request.method == 'POST':
@@ -234,13 +238,13 @@ def group_update(request, id):
     group.name = group_name
     group.authority = group_authority
     group.save()
-    return redirect('group_detail', id=group.id)
+    return redirect('group_detail', name=group.name)
   return redirect('group_list')
 
 
-def group_delete(request, id):
+def group_delete(request, name):
   try:
-    group = Group.objects.get(id=id)
+    group = Group.objects.get(name=name)
   except Group.DoesNotExist:
     raise Http404("Group Not Found")
   group.delete()
@@ -256,12 +260,12 @@ def lock_list(request):
   return render(request, 'webapp/locks.html', context)
 
 
-def lock_detail(request, id):
+def lock_detail(request, name):
   view = 'locks'
   locks = Lock.objects.all()
   devices = Device.objects.all()
   try:
-    lock = Lock.objects.get(id=id)
+    lock = Lock.objects.get(name=name)
   except Lock.DoesNotExist:
     raise Http404("Lock Not Found")
   context = {'view': view, 'locks': locks, 'devices': devices, 'query': lock}
@@ -270,34 +274,36 @@ def lock_detail(request, id):
 
 def lock_create(request):  
   if request.method == 'POST':
-    lock_id = request.POST.get('id')
-    lock_device = Device(id=request.POST.get('device'))
+    lock_name = request.POST.get('name')
+    lock_device = Device.objects.get(chip_id=request.POST.get('device'))
     lock_auth = request.POST.get('auth')
-    if lock_id:
-      lock = Lock(id=lock_id, device=lock_device, min_auth=lock_auth)
-      lock.save()
+    
+    lock = Lock(name=lock_name, device=lock_device, min_auth=lock_auth)
+    lock.save()
   return redirect('lock_list')
 
 
-def lock_update(request, id):
+def lock_update(request, name):
   try:
-    lock = Lock.objects.get(id=id)
+    lock = Lock.objects.get(name=name)
   except Lock.DoesNotExist:
     raise Http404("Lock Not Found")
   if request.method == 'POST':
-    lock_id = request.POST.get('id')
+    lock_name = request.POST.get('name')
+    lock_device = Device.objects.get(chip_id=request.POST.get('device'))
     lock_auth = request.POST.get('auth')
-    if lock_id:
-      lock.id = lock_id
-      lock.min_auth = lock_auth
-      lock.save()
-      return redirect('lock_detail', id=lock.id)
+
+    lock.name = lock_name
+    lock.device = lock_device
+    lock.min_auth = lock_auth
+    lock.save()
+    return redirect('lock_detail', name=lock.name)
   return redirect('lock_list')
 
 
-def lock_delete(request, id):
+def lock_delete(request, name):
   try:
-    lock = Lock.objects.get(id=id)
+    lock = Lock.objects.get(name=name)
   except Lock.DoesNotExist:
     raise Http404("Lock Not Found")
   lock.delete()
@@ -313,12 +319,12 @@ def user_list(request):
   return render(request, 'webapp/users.html', context)
 
 
-def user_detail(request, id):
+def user_detail(request, username):
   view = 'users'
   users = User.objects.all()
   groups = Group.objects.all()
   try:
-    user = User.objects.get(id=id)
+    user = User.objects.get(username=username)
   except User.DoesNotExist:
     raise Http404("User Not Found")
   context = {'view': view, 'users': users, 'groups': groups, 'query': user}
@@ -327,34 +333,33 @@ def user_detail(request, id):
 
 def user_create(request):  
   if request.method == 'POST':
-    user_id = request.POST.get('id')
     user_name = request.POST.get('username')
-    user_group = Group(id=request.POST.get('group'))
-    if user_id:
-      user = User(id=user_id, username=user_name, group=user_group)
-      user.save()
+    user_group = Group.objects.get(name=request.POST.get('group'))
+    
+    user = User(username=user_name, group=user_group)
+    user.save()
   return redirect('user_list')
 
 
-def user_update(request, id):
+def user_update(request, username):
   try:
-    user = User.objects.get(id=id)
+    user = User.objects.get(username=username)
   except User.DoesNotExist:
     raise Http404("User Not Found")
   if request.method == 'POST':
-    user_id = request.POST.get('id')
-    user_name = request.POST.get('name')
-    if user_id:
-      user.id = user_id
-      user.username = user_name
-      user.save()
-      return redirect('user_detail', id=user.id)
+    user_name = request.POST.get('username')
+    user_group = Group.objects.get(name=request.POST.get('group'))
+
+    user.username = user_name
+    user.group = user_group
+    user.save()
+    return redirect('user_detail', username=user.username)
   return redirect('user_list')
 
 
-def user_delete(request, id):
+def user_delete(request, username):
   try:
-    user = User.objects.get(id=id)
+    user = User.objects.get(username=username)
   except User.DoesNotExist:
     raise Http404("User Not Found")
   user.delete()

@@ -6,14 +6,14 @@
   <div class="popup-dialog">
     <p class="title">New Lock</p>
 
-    <form action="{% url 'lock_create' %}" method="post">
+    <form id="form" action="{% if query %}{% url 'lock_update' name=query.name %}{% else %}{% url 'lock_create' %}{% endif %}" method="post">
       {% csrf_token %}
 
       <div class="inner-form">
         <div class="m-group">
-          <input class="m-input" id="id" type="text" name="id" value="{{ query.id }}" aria-labelledby="label-id">
-          <label for="id" class="m-label" id="label-id">
-            <div class="m-label-text">ID</div>
+          <input class="m-input" id="name" type="text" name="name" value="{{ query.name }}" aria-labelledby="label-name">
+          <label for="name" class="m-label" id="label-name">
+            <div class="m-label-text">Name</div>
           </label>
         </div>
 
@@ -25,14 +25,14 @@
         </div>
 
         <div class="m-group">
-          <input class="m-input" list="devices" id="device" name="device" value="{{ query.device.id }}"
+          <input class="m-input" list="devices" id="device" name="device" value="{{ query.device.chip_id }}"
             aria-labelledby="label-device">
           <label for="device" class="m-label" id="label-device">
             <div class="m-label-text">Choose a device</div>
           </label>
           <datalist id="devices">
             {% for device in devices %}
-            <option value="{{ device.id }}"></option>
+            <option value="{{ device.chip_id }}"></option>
             {% endfor %}
           </datalist>
         </div>
@@ -53,6 +53,7 @@
     <thead class="thead">
       <tr class="tr">
         <th class="no-select">ID</th>
+        <th class="no-select">Name</th>
         <th class="no-select">Min. Auth</th>
         <th class="no-select">Device</th>
         <th class="no-select"><i class="bi bi-gear"></i></th>
@@ -62,12 +63,13 @@
       {% for lock in locks %}
       <tr class="tr">
         <td>{{ lock.id }}</td>
+        <td>{{ lock.name }}</td>
         <td>{{ lock.min_auth }}</td>
-        <td>{{ lock.device.id }}</td>
+        <td>{{ lock.device.chip_id }}</td>
         <td>
-          <button class="btn btn-more btn-edit" onclick="location.href='{% url 'lock_detail' id=lock.id %}'"><i
+          <button class="btn btn-more btn-edit" onclick="location.href='{% url 'lock_detail' name=lock.name %}'"><i
               class="bi bi-pencil-fill"></i></button>
-          <button class="btn btn-more btn-delete" onclick="location.href='{% url 'lock_delete' id=lock.id %}'"><i
+          <button class="btn btn-more btn-delete" onclick="location.href='{% url 'lock_delete' name=lock.name %}'"><i
               class="bi bi-trash3-fill"></i></button>
         </td>
       </tr>
@@ -80,18 +82,21 @@
   const openFormButton = document.getElementById('open-form-button');
   const popupBackground = document.querySelector('.cover');
 
+  const form = document.getElementById('form');
   const formAcceptButton = document.getElementById('accept-form-button');
   const formCancelButton = document.getElementById('cancel-form-button');
 
-  const id = document.getElementById('id');
+  const name = document.getElementById('name');
   const minAuth = document.getElementById('auth');
   const device = document.getElementById('device');
 
   openFormButton.addEventListener('click', () => {
     formAcceptButton.innerText = 'Create';
     popupBackground.style.display = 'flex';
+    form.action = '{% url 'lock_create' %}';
 
-    id.setAttribute('value', '');
+    name.setAttribute('value', '');
+    minAuth.setAttribute('value', '');
     device.setAttribute('value', '');
   });
 
@@ -99,8 +104,8 @@
     popupBackground.style.display = 'none';
   });
 
-  id.addEventListener('input', () => {
-    id.setAttribute('value', id.value);
+  name.addEventListener('input', () => {
+    name.setAttribute('value', name.value);
   });
 
   minAuth.addEventListener('input', () => {

@@ -6,12 +6,12 @@
   <div class="popup-dialog">
     <p class="title">New Device</p>
 
-    <form action="{% url 'device_create' %}" method="post">
+    <form id="form" action="{% if query %}{% url 'device_update' id=query.chip_id %}{% else %}{% url 'device_create' %}{% endif %}" method="post">
       {% csrf_token %}
 
       <div class="inner-form">
         <div class="m-group">
-          <input class="m-input" id="id" type="text" name="id" value="{{ query.id }}" aria-labelledby="label-id">
+          <input class="m-input" id="id" type="text" name="id" value="{{ query.chip_id }}" aria-labelledby="label-id">
           <label for="id" class="m-label" id="label-id">
             <div class="m-label-text">ID</div>
           </label>
@@ -32,6 +32,7 @@
     <thead class="thead">
       <tr class="tr">
         <th class="no-select">ID</th>
+        <th class="no-select">Chip</th>
         <th class="no-select"><i class="bi bi-gear"></i></th>
       </tr>
     </thead>
@@ -39,10 +40,11 @@
       {% for device in devices %}
       <tr class="tr">
         <td>{{ device.id }}</td>
+        <td>{{ device.chip_id }}</td>
         <td>
-          <button class="btn btn-more btn-edit" onclick="location.href='{% url 'device_detail' id=device.id %}'"><i
+          <button class="btn btn-more btn-edit" onclick="location.href='{% url 'device_detail' id=device.chip_id %}'"><i
               class="bi bi-pencil-fill"></i></button>
-          <button class="btn btn-more btn-delete" onclick="location.href='{% url 'device_delete' id=device.id %}'"><i
+          <button class="btn btn-more btn-delete" onclick="location.href='{% url 'device_delete' id=device.chip_id %}'"><i
               class="bi bi-trash3-fill"></i></button>
         </td>
       </tr>
@@ -55,6 +57,7 @@
   const openFormButton = document.getElementById('open-form-button');
   const popupBackground = document.querySelector('.cover');
 
+  const form = document.getElementById("form");
   const formAcceptButton = document.getElementById('accept-form-button');
   const formCancelButton = document.getElementById('cancel-form-button');
 
@@ -63,6 +66,7 @@
   openFormButton.addEventListener('click', () => {
     formAcceptButton.innerText = 'Create';
     popupBackground.style.display = 'flex';
+    form.action = '{% url 'device_create' %}';
 
     id.setAttribute('value', '');
   });

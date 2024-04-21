@@ -6,7 +6,7 @@
   <div class="popup-dialog">
     <p class="title">New Group</p>
 
-    <form action="{% if query %}{% url 'group_update' id=query.id %}{% else %}{% url 'group_create' %}{% endif %}" method="post">
+    <form id="form" action="{% if query %}{% url 'group_update' name=query.name %}{% else %}{% url 'group_create' %}{% endif %}" method="post">
       {% csrf_token %}
 
       <div class="inner-form">
@@ -53,9 +53,9 @@
         <td>{{ group.name }}</td>
         <td>{{ group.authority }}</td>
         <td>
-          <button class="btn btn-more btn-edit" onclick="location.href='{% url 'group_detail' id=group.id %}'"><i
+          <button class="btn btn-more btn-edit" onclick="location.href='{% url 'group_detail' name=group.name %}'"><i
               class="bi bi-pencil-fill"></i></button>
-          <button class="btn btn-more btn-delete" onclick="location.href='{% url 'group_delete' id=group.id %}'"><i
+          <button class="btn btn-more btn-delete" onclick="location.href='{% url 'group_delete' name=group.name %}'"><i
               class="bi bi-trash3-fill"></i></button>
         </td>
       </tr>
@@ -68,6 +68,7 @@
   const openFormButton = document.getElementById('open-form-button');
   const popupBackground = document.querySelector('.cover');
 
+  const form = document.getElementById("form");
   const formAcceptButton = document.getElementById('accept-form-button');
   const formCancelButton = document.getElementById('cancel-form-button');
 
@@ -77,6 +78,7 @@
   openFormButton.addEventListener('click', () => {
     formAcceptButton.innerText = 'Create';
     popupBackground.style.display = 'flex';
+    form.action = '{% url 'group_create' %}';
 
     name.setAttribute('value', '');
     authority.setAttribute('value', '');

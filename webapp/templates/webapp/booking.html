@@ -13,11 +13,11 @@
 
     <p id="output" class="title text-center">Hold the card</p>
 
-    <form action="{% url 'card_create' %}" method="post">
+    <form id="form" action="{% if query %}{% url 'card_update' uuuid=query.uuuid %}{% else %}{% url 'card_create' %}{% endif %}" method="post">
       {% csrf_token %}
 
       <div class="inner-form">
-        <input id="uid" type="hidden" name="uid" value="">
+        <input id="uuid" type="hidden" name="uuid" value="">
 
         <div class="m-group">
           <input class="m-input" id="created-at" type="datetime-local" name="created-at"
@@ -36,7 +36,7 @@
           </label>
           <datalist id="locks">
             {% for lock in locks %}
-            <option value="{{ lock.id }}"></option>
+            <option value="{{ lock.name }}"></option>
             {% endfor %}
           </datalist>
         </div>
@@ -73,13 +73,13 @@
     <tbody class="tbody">
       {% for card in cards %}
       <tr class="tr">
-        <td>{{ card.lock.id }}</td>
+        <td>{{ card.lock.name }}</td>
         <td>{{ card.created_at|date:'Y-m-d H:i:s' }}</td>
         <td>{{ card.due_date|date:'Y-m-d H:i:s' }}</td>
         <td>
-          <button class="btn btn-more btn-edit" onclick="location.href='{% url 'card_detail' uid=card.uid %}'"><i
+          <button class="btn btn-more btn-edit" onclick="location.href='{% url 'card_detail' uuid=card.uuid %}'"><i
               class="bi bi-pencil-fill"></i></button>
-          <button class="btn btn-more btn-delete" onclick="location.href='{% url 'card_delete' uid=card.uid %}'"><i
+          <button class="btn btn-more btn-delete" onclick="location.href='{% url 'card_delete' uuid=card.uuid %}'"><i
               class="bi bi-trash3-fill"></i></button>
         </td>
       </tr>
@@ -92,10 +92,11 @@
   const openFormButton = document.getElementById('open-form-button');
   const popupBackground = document.querySelector('.cover');
 
+  const form = document.getElementById('form');
   const formAcceptButton = document.getElementById('accept-form-button');
   const formCancelButton = document.getElementById('cancel-form-button');
 
-  const uid = document.getElementById('uid');
+  const uuid = document.getElementById('uuid');
   const createdAt = document.getElementById('created-at');
   const dueDate = document.getElementById('due-date');
   const lock = document.getElementById('lock');
@@ -103,8 +104,9 @@
   openFormButton.addEventListener('click', () => {
     formAcceptButton.innerText = 'Create';
     popupBackground.style.display = 'flex';
+    form.action = '{% url 'card_create' %}';
 
-    uid.setAttribute('value', '');
+    uuid.setAttribute('value', '');
     createdAt.setAttribute('value', datetime());
     dueDate.setAttribute('value', datetime());
     lock.setAttribute('value', '');
@@ -144,7 +146,7 @@
         console.log("Received data:", e.data);
         // You can further manipulate or display the data as needed
         output.innerHTML = "Remove the card";// JSON.stringify(data, null, 2);
-        uid.setAttribute('value', e.data.trim());
+        uuid.setAttribute('value', e.data.trim());
       };
 
       ws.onerror = function (e) {

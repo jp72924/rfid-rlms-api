@@ -3,17 +3,20 @@ from django.utils import timezone
 
 
 class Device(models.Model):
-  id = models.CharField(max_length=255, primary_key=True)
+  id = models.AutoField(primary_key=True)
+  chip_id = models.CharField(max_length=255, unique=True)
 
 
 class Lock(models.Model):
-  id = models.IntegerField(primary_key=True)
+  id = models.AutoField(primary_key=True)
+  name = models.CharField(max_length=255, unique=True)
   device = models.ForeignKey(Device, on_delete=models.CASCADE, null=True)
   min_auth = models.IntegerField(blank=True, null=True)
 
 
 class Card(models.Model):
-  uid = models.CharField(max_length=255, primary_key=True)
+  id = models.AutoField(primary_key=True)
+  uuid = models.CharField(max_length=255, unique=True)
   created_at = models.DateTimeField(auto_now_add=True)
   due_date = models.DateTimeField(blank=True, null=True)
   lock = models.ForeignKey(Lock, on_delete=models.CASCADE, null=True)
@@ -28,7 +31,7 @@ class Card(models.Model):
 
 class User(models.Model):
   id = models.AutoField(primary_key=True)
-  username = models.CharField(max_length=255)
+  username = models.CharField(max_length=255, unique=True)
   group = models.ForeignKey('Group', on_delete=models.CASCADE)
 
 

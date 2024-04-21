@@ -4,7 +4,8 @@ from webapp import views
 
 urlpatterns = [
   path('auth', views.authorize, name='auth'),
-  
+  path('accounts/login/', views.login_view, name='login'),
+  path('accounts/logout/', views.logout_view, name='logout'),
   path('booking', views.booking, name='booking'),
 
   path('card/list', views.card_list, name='card_list'),  # List all cards

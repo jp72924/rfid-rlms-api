@@ -1,13 +1,16 @@
+from django.contrib.auth import authenticate
+from django.contrib.auth import login
+from django.contrib.auth import logout
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import Group
+from django.contrib.auth.models import User
+from django.http import Http404
+from django.http import JsonResponse
 from django.shortcuts import render
 from django.shortcuts import redirect
-from django.http import Http404
-from django.http import HttpResponse
-from django.http import JsonResponse
 from webapp.models import Card
 from webapp.models import Device
-from webapp.models import Group
 from webapp.models import Lock
-from webapp.models import User
 
 from datetime import datetime
 
@@ -26,10 +29,6 @@ def convert_to_django_date(datetime_str):
     return datetime_obj # Extract the date portion for Django model
   except ValueError:
     raise ValueError(f"Invalid datetime string format: {datetime_str}")
-
-
-def index(request):
-  return HttpResponse("Hello, world. You're at the polls index.")
   
   
 def authorize(request):
@@ -74,6 +73,31 @@ def check_authorization(card, device_id, lock_status):
       card.user.group.authority >= card.lock.min_auth) + int(lock_status and card.user.group.authority < 3)
 
 
+def login_view(request):
+  if not request.user.is_authenticated:
+    if request.method == 'POST':
+      username = request.POST.get('username')
+      password = request.POST.get('password')
+      user = authenticate(request, username=username, password=password)
+      if user:
+        login(request, user)
+        return redirect('booking')  # Redirect to your homepage
+      else:
+        # Login failed
+        error_message = 'Invalid username or password'
+    else:
+      error_message = None
+    return render(request, 'webapp/login.html', {'error_message': error_message})
+  return redirect('booking')
+
+@login_required
+def logout_view(request):
+  logout(request)
+  # Optionally redirect to a specific page after logout
+  return redirect('login')  # Replace 'login' with your login URL name
+
+
+@login_required
 def booking(request):
   view = 'booking'
   cards = Card.objects.all()
@@ -83,6 +107,7 @@ def booking(request):
 
 # Cards
 
+@login_required
 def card_list(request):
   view = 'cards'
   cards = Card.objects.all()
@@ -91,7 +116,7 @@ def card_list(request):
   context = {'view': view, 'cards': cards, 'locks': locks, 'users': users}
   return render(request, 'webapp/cards.html', context)
 
-
+@login_required
 def card_detail(request, uuid):
   view = 'cards'
   cards = Card.objects.all()
@@ -105,6 +130,7 @@ def card_detail(request, uuid):
   return render(request, 'webapp/cards.html', context)
 
 
+@login_required
 def card_create(request):  
   if request.method == 'POST':
     card_uuid = request.POST.get('uuid')
@@ -117,6 +143,7 @@ def card_create(request):
   return redirect('card_list')
 
 
+@login_required
 def card_update(request, uuid):
   try:
     card = Card.objects.get(uuid=uuid)
@@ -137,6 +164,7 @@ def card_update(request, uuid):
   return redirect('card_list')
 
 
+@login_required
 def card_delete(request, uuid):
   try:
     card = Card.objects.get(uuid=uuid)
@@ -147,6 +175,7 @@ def card_delete(request, uuid):
 
 # Devices
 
+@login_required
 def device_list(request):
   view = 'devices'
   devices = Device.objects.all()
@@ -154,6 +183,7 @@ def device_list(request):
   return render(request, 'webapp/devices.html', context)
 
 
+@login_required
 def device_detail(request, id):
   view = 'devices'
   devices = Device.objects.all()
@@ -165,6 +195,7 @@ def device_detail(request, id):
   return render(request, 'webapp/devices.html', context)
 
 
+@login_required
 def device_create(request):
   if request.method == 'POST':
     device_chip = request.POST.get('id')
@@ -174,6 +205,7 @@ def device_create(request):
   return redirect('device_list')
 
 
+@login_required
 def device_update(request, id):
   try:
     device = Device.objects.get(chip_id=id)
@@ -188,6 +220,7 @@ def device_update(request, id):
   return redirect('device_list')
 
 
+@login_required
 def device_delete(request, id):
   try:
     device = Device.objects.get(chip_id=id)
@@ -198,6 +231,7 @@ def device_delete(request, id):
 
 # Groups
 
+@login_required
 def group_list(request):
   view = 'groups'
   groups = Group.objects.all()
@@ -205,6 +239,7 @@ def group_list(request):
   return render(request, 'webapp/groups.html', context)
 
 
+@login_required
 def group_detail(request, name):
   view = 'groups'
   groups = Group.objects.all()
@@ -216,16 +251,18 @@ def group_detail(request, name):
   return render(request, 'webapp/groups.html', context)
 
 
+@login_required
 def group_create(request):  
   if request.method == 'POST':
     group_name = request.POST.get('name')
     group_authority = request.POST.get('authority')
 
-    group = Group(name=group_name, authority=group_authority)
+    group = Group.objects.create(name=group_name)
     group.save()
   return redirect('group_list')
 
 
+@login_required
 def group_update(request, name):
   try:
     group = Group.objects.get(name=name)
@@ -242,6 +279,7 @@ def group_update(request, name):
   return redirect('group_list')
 
 
+@login_required
 def group_delete(request, name):
   try:
     group = Group.objects.get(name=name)
@@ -252,6 +290,7 @@ def group_delete(request, name):
 
 # Locks
 
+@login_required
 def lock_list(request):
   view = 'locks'
   locks = Lock.objects.all()
@@ -260,6 +299,7 @@ def lock_list(request):
   return render(request, 'webapp/locks.html', context)
 
 
+@login_required
 def lock_detail(request, name):
   view = 'locks'
   locks = Lock.objects.all()
@@ -272,6 +312,7 @@ def lock_detail(request, name):
   return render(request, 'webapp/locks.html', context)
 
 
+@login_required
 def lock_create(request):  
   if request.method == 'POST':
     lock_name = request.POST.get('name')
@@ -283,6 +324,7 @@ def lock_create(request):
   return redirect('lock_list')
 
 
+@login_required
 def lock_update(request, name):
   try:
     lock = Lock.objects.get(name=name)
@@ -301,6 +343,7 @@ def lock_update(request, name):
   return redirect('lock_list')
 
 
+@login_required
 def lock_delete(request, name):
   try:
     lock = Lock.objects.get(name=name)
@@ -311,6 +354,7 @@ def lock_delete(request, name):
 
 # Users
 
+@login_required
 def user_list(request):
   view = 'users'
   users = User.objects.all()
@@ -319,6 +363,7 @@ def user_list(request):
   return render(request, 'webapp/users.html', context)
 
 
+@login_required
 def user_detail(request, username):
   view = 'users'
   users = User.objects.all()
@@ -331,16 +376,21 @@ def user_detail(request, username):
   return render(request, 'webapp/users.html', context)
 
 
+@login_required
 def user_create(request):  
   if request.method == 'POST':
     user_name = request.POST.get('username')
+    user_password = request.POST.get('password')
+    user_email = request.POST.get('email')
     user_group = Group.objects.get(name=request.POST.get('group'))
     
-    user = User(username=user_name, group=user_group)
-    user.save()
+    user = User.objects.create_user(username=user_name, password=user_password, email=user_email)
+    user.groups.clear()
+    user.groups.add(user_group)
   return redirect('user_list')
 
 
+@login_required
 def user_update(request, username):
   try:
     user = User.objects.get(username=username)
@@ -348,15 +398,21 @@ def user_update(request, username):
     raise Http404("User Not Found")
   if request.method == 'POST':
     user_name = request.POST.get('username')
+    user_password = request.POST.get('password')
+    user_email = request.POST.get('email')
     user_group = Group.objects.get(name=request.POST.get('group'))
 
     user.username = user_name
-    user.group = user_group
+    user.set_password(user_password)
+    user.email = user_email
+    user.groups.clear()
+    user.groups.add(user_group)
     user.save()
     return redirect('user_detail', username=user.username)
   return redirect('user_list')
 
 
+@login_required
 def user_delete(request, username):
   try:
     user = User.objects.get(username=username)

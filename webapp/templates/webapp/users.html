@@ -18,7 +18,21 @@
         </div>
 
         <div class="m-group">
-          <input class="m-input" list="groups" id="group" name="group" value="{{ query.group.name }}"
+          <input class="m-input" id="password" type="password" name="password" value="" aria-labelledby="label-password">
+          <label for="password" class="m-label" id="label-password">
+            <div class="m-label-text">Password</div>
+          </label>
+        </div>
+
+        <div class="m-group">
+          <input class="m-input" id="email" type="email" name="email" value="{{ query.email }}" aria-labelledby="label-email">
+          <label for="email" class="m-label" id="label-email">
+            <div class="m-label-text">E-mail</div>
+          </label>
+        </div>
+
+        <div class="m-group">
+          <input class="m-input" list="groups" id="group" name="group" value="{{ query.groups.all|first }}"
             aria-labelledby="label-group">
           <label for="group" class="m-label" id="label-group">
             <div class="m-label-text">Choose a group</div>
@@ -47,6 +61,7 @@
       <tr class="tr">
         <th class="no-select">ID</th>
         <th class="no-select">Username</th>
+        <th class="no-select">E-mail</th>
         <th class="no-select">Group</th>
         <th class="no-select"><i class="bi bi-gear"></i></th>
       </tr>
@@ -56,7 +71,8 @@
       <tr class="tr">
         <td>{{ user.id }}</td>
         <td>{{ user.username }}</td>
-        <td>{{ user.group.name }}</td>
+        <td>{{ user.email }}</td>
+        <td>{{ user.groups.all|first }}</td>
         <td>
           <button class="btn btn-more btn-edit" onclick="location.href='{% url 'user_detail' username=user.username %}'"><i
               class="bi bi-pencil-fill"></i></button>
@@ -78,6 +94,8 @@
   const formCancelButton = document.getElementById('cancel-form-button');
 
   const username = document.getElementById('username');
+  const password = document.getElementById('password');
+  const email = document.getElementById('email');
   const group = document.getElementById('group');
 
   openFormButton.addEventListener('click', () => {
@@ -86,6 +104,8 @@
     form.action = '{% url 'user_create' %}';
 
     username.setAttribute('value', '');
+    password.setAttribute('value', '');
+    email.setAttribute('value', '');
     group.setAttribute('value', '');
   });
 
@@ -95,6 +115,14 @@
 
   username.addEventListener('input', () => {
     username.setAttribute('value', username.value);
+  });
+
+  password.addEventListener('input', () => {
+    password.setAttribute('value', password.value);
+  });
+
+  email.addEventListener('input', () => {
+    email.setAttribute('value', email.value);
   });
 
   group.addEventListener('input', () => {

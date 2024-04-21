@@ -1,0 +1,67 @@
+{% extends 'webapp/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="full-height d-flex fx-center fy-center">
+    <div class="full-height full-width container d-flex fx-center fy-center">
+        <div class="inner-wrap">
+            <h2>Login</h2>
+            <br>
+            <form method="post" class="d-flex f-col">
+                {% csrf_token %}
+                
+                <div class="m-group">
+                    <input class="m-input" id="username" type="text" name="username" value=""
+                        aria-labelledby="label-username">
+                    <label for="username" class="m-label" id="label-username">
+                        <div class="m-label-text">Username</div>
+                    </label>
+                </div>
+                <div class="m-group">
+                    <input class="m-input" id="password" type="text" name="password" value=""
+                        aria-labelledby="label-password">
+                    <label for="password" class="m-label" id="label-password">
+                        <div class="m-label-text">Password</div>
+                    </label>
+                </div>
+                <button class="btn btn-new" type="submit">Sign in</button>
+            </form>
+        </div>
+    </div>
+</div>
+<style>
+    .container {
+        padding: 2rem;
+        border-radius: 0.375rem;
+        box-shadow: var(--accent-shadow);
+    }
+
+    form {
+        gap: 1rem;
+    }
+
+    h3,
+    h2 {
+        color: var(--color-blue);
+    }
+
+    @media screen and (min-width: 576px) {
+        .container {
+            height: auto;
+            width: fit-content;
+        }
+    }
+</style>
+<script>
+    const username = document.getElementById('username');
+    const password = document.getElementById('password');
+
+    username.addEventListener('input', () => {
+        username.setAttribute('value', username.value);
+    });
+
+    password.addEventListener('input', () => {
+        password.setAttribute('value', password.value);
+    });
+</script>
+{% endblock content %}

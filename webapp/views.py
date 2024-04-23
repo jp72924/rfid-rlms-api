@@ -2,12 +2,12 @@ from django.contrib.auth import authenticate
 from django.contrib.auth import login
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import Group
 from django.contrib.auth.models import User
 from django.http import Http404
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.shortcuts import redirect
+from webapp.models import CustomGroup
 from webapp.models import Card
 from webapp.models import Device
 from webapp.models import Lock
@@ -67,10 +67,11 @@ def authorize(request):
 
 # Helper function to check authorization logic
 def check_authorization(card, device_id, lock_status):
+  group = CustomGroup.objects.get(name=card.user.groups.first().name)
   return int(
       device_id == card.lock.device.chip_id and
       not card.is_overdue() and
-      card.user.group.authority >= card.lock.min_auth) + int(lock_status and card.user.group.authority < 3)
+      group.authority >= card.lock.min_auth) + int(lock_status and group.authority < 3)
 
 
 def login_view(request):
@@ -234,7 +235,7 @@ def device_delete(request, id):
 @login_required
 def group_list(request):
   view = 'groups'
-  groups = Group.objects.all()
+  groups = CustomGroup.objects.all()
   context = {'view': view, 'groups': groups}
   return render(request, 'webapp/groups.html', context)
 
@@ -242,11 +243,11 @@ def group_list(request):
 @login_required
 def group_detail(request, name):
   view = 'groups'
-  groups = Group.objects.all()
+  groups = CustomGroup.objects.all()
   try:
-    group = Group.objects.get(name=name)
-  except Group.DoesNotExist:
-    raise Http404("Group Not Found")
+    group = CustomGroup.objects.get(name=name)
+  except CustomGroup.DoesNotExist:
+    raise Http404("CustomGroup Not Found")
   context = {'view': view, 'groups': groups, 'query': group}
   return render(request, 'webapp/groups.html', context)
 
@@ -257,7 +258,8 @@ def group_create(request):
     group_name = request.POST.get('name')
     group_authority = request.POST.get('authority')
 
-    group = Group.objects.create(name=group_name)
+    group = CustomGroup.objects.create(name=group_name)
+    group.authority = group_authority
     group.save()
   return redirect('group_list')
 
@@ -265,9 +267,9 @@ def group_create(request):
 @login_required
 def group_update(request, name):
   try:
-    group = Group.objects.get(name=name)
-  except Group.DoesNotExist:
-    raise Http404("Group Not Found")
+    group = CustomGroup.objects.get(name=name)
+  except CustomGroup.DoesNotExist:
+    raise Http404("CustomGroup Not Found")
   if request.method == 'POST':
     group_name = request.POST.get('name')
     group_authority = request.POST.get('authority')
@@ -282,9 +284,9 @@ def group_update(request, name):
 @login_required
 def group_delete(request, name):
   try:
-    group = Group.objects.get(name=name)
-  except Group.DoesNotExist:
-    raise Http404("Group Not Found")
+    group = CustomGroup.objects.get(name=name)
+  except CustomGroup.DoesNotExist:
+    raise Http404("CustomGroup Not Found")
   group.delete()
   return redirect('group_list')
 
@@ -358,7 +360,7 @@ def lock_delete(request, name):
 def user_list(request):
   view = 'users'
   users = User.objects.all()
-  groups = Group.objects.all()
+  groups = CustomGroup.objects.all()
   context = {'view': view, 'users': users, 'groups': groups}
   return render(request, 'webapp/users.html', context)
 
@@ -367,7 +369,7 @@ def user_list(request):
 def user_detail(request, username):
   view = 'users'
   users = User.objects.all()
-  groups = Group.objects.all()
+  groups = CustomGroup.objects.all()
   try:
     user = User.objects.get(username=username)
   except User.DoesNotExist:
@@ -382,7 +384,7 @@ def user_create(request):
     user_name = request.POST.get('username')
     user_password = request.POST.get('password')
     user_email = request.POST.get('email')
-    user_group = Group.objects.get(name=request.POST.get('group'))
+    user_group = CustomGroup.objects.get(name=request.POST.get('group'))
     
     user = User.objects.create_user(username=user_name, password=user_password, email=user_email)
     user.groups.clear()
@@ -400,7 +402,7 @@ def user_update(request, username):
     user_name = request.POST.get('username')
     user_password = request.POST.get('password')
     user_email = request.POST.get('email')
-    user_group = Group.objects.get(name=request.POST.get('group'))
+    user_group = CustomGroup.objects.get(name=request.POST.get('group'))
 
     user.username = user_name
     user.set_password(user_password)

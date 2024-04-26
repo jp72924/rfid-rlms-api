@@ -26,10 +26,26 @@
     flex-direction: row;
 }
 
+.fx-start {
+    justify-content: flex-start;
+}
+
 .fx-center {
     justify-content: center;
 }
 
+.fx-end {
+    justify-content: flex-end;
+}
+
+.fy-start {
+    align-items: flex-start;
+}
+
 .fy-center {
     align-items: center;
+}
+
+.fy-end {
+    align-items: flex-end;
 }

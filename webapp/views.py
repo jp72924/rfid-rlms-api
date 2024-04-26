@@ -5,12 +5,13 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http import Http404
 from django.http import JsonResponse
-from django.shortcuts import render
 from django.shortcuts import redirect
+from django.shortcuts import render
 from webapp.models import CustomGroup
 from webapp.models import Card
 from webapp.models import Device
 from webapp.models import Lock
+from webapp.models import Record
 
 from datetime import datetime
 
@@ -29,6 +30,11 @@ def convert_to_django_date(datetime_str):
     return datetime_obj # Extract the date portion for Django model
   except ValueError:
     raise ValueError(f"Invalid datetime string format: {datetime_str}")
+
+
+def notify(request, title, content):
+  message = {'title': title, 'content': content}
+  request.session['message'] = message
   
   
 def authorize(request):
@@ -82,13 +88,13 @@ def login_view(request):
       user = authenticate(request, username=username, password=password)
       if user:
         login(request, user)
+        notify(request, f"Welcome, @{username}!", 'You are successfully logged in')
         return redirect('booking')  # Redirect to your homepage
       else:
         # Login failed
-        error_message = 'Invalid username or password'
-    else:
-      error_message = None
-    return render(request, 'webapp/login.html', {'error_message': error_message})
+        notify(request, 'Login Failed', 'Username or password was incorrect')
+  
+    return render(request, 'webapp/login.html')
   return redirect('booking')
 
 @login_required
@@ -141,6 +147,7 @@ def card_create(request):
 
     card = Card(uuid=card_uuid, lock=card_lock, due_date=card_due_date, user=card_user)
     card.save()
+    notify(request, f"New card added", f"@{card_user.username} now has access to {card_lock.name}")
   return redirect('card_list')
 
 
@@ -161,6 +168,7 @@ def card_update(request, uuid):
     card.due_date = card_due_date
     card.user = card_user
     card.save()
+    notify(request, f"Card updated", f"Access granted to @{card_user.username} for {card_lock.name} until {card_due_date}")
     return redirect('card_detail', uuid=card.uuid)
   return redirect('card_list')
 
@@ -422,3 +430,11 @@ def user_delete(request, username):
     raise Http404("User Not Found")
   user.delete()
   return redirect('user_list')
+
+
+@login_required
+def logs(request):
+  view = 'logs'
+  records = Record.objects.all()
+  context = {'view': view, 'records': records}
+  return render(request, 'webapp/logs.html', context)

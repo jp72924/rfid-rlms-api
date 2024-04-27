@@ -32,8 +32,8 @@ def convert_to_django_date(datetime_str):
     raise ValueError(f"Invalid datetime string format: {datetime_str}")
 
 
-def notify(request, title, content):
-  message = {'title': title, 'content': content}
+def notify(request, type, title, content):
+  message = {'type': type, 'title': title, 'content': content}
   request.session['message'] = message
   
   
@@ -88,11 +88,11 @@ def login_view(request):
       user = authenticate(request, username=username, password=password)
       if user:
         login(request, user)
-        notify(request, f"Welcome, @{username}!", 'You are successfully logged in')
+        notify(request, "info", f"Welcome, @{username}!", 'You are successfully logged in')
         return redirect('booking')  # Redirect to your homepage
       else:
         # Login failed
-        notify(request, 'Login Failed', 'Username or password was incorrect')
+        notify(request, "info", 'Login Failed', 'Username or password was incorrect')
   
     return render(request, 'webapp/login.html')
   return redirect('booking')
@@ -147,7 +147,7 @@ def card_create(request):
 
     card = Card(uuid=card_uuid, lock=card_lock, due_date=card_due_date, user=card_user)
     card.save()
-    notify(request, f"New card added", f"@{card_user.username} now has access to {card_lock.name}")
+    notify(request, "success", f"New card added", f"Access granted to @{card_user.username} for {card_lock.name}")
   return redirect('card_list')
 
 
@@ -168,7 +168,7 @@ def card_update(request, uuid):
     card.due_date = card_due_date
     card.user = card_user
     card.save()
-    notify(request, f"Card updated", f"Access granted to @{card_user.username} for {card_lock.name} until {card_due_date}")
+    notify(request, "info", f"Card updated", f"@{card_user.username} now has access to {card_lock.name} until {card_due_date}")
     return redirect('card_detail', uuid=card.uuid)
   return redirect('card_list')
 
@@ -177,9 +177,12 @@ def card_update(request, uuid):
 def card_delete(request, uuid):
   try:
     card = Card.objects.get(uuid=uuid)
+    card_lock = card.lock
+    card_user = card.user
   except Card.DoesNotExist:
     raise Http404("Card Not Found")
   card.delete()
+  notify(request, "danger", f"Card removed", f"Access revoked to @{card_user.username} for {card_lock.name}")
   return redirect('card_list')
 
 # Devices
@@ -207,10 +210,11 @@ def device_detail(request, id):
 @login_required
 def device_create(request):
   if request.method == 'POST':
-    device_chip = request.POST.get('id')
+    device_chip = request.POST.get('chip-id')
 
     device = Device(chip_id=device_chip)
     device.save()
+  notify(request, "success", f"New device added", f"Device {device_chip} is now available")
   return redirect('device_list')
 
 
@@ -221,10 +225,11 @@ def device_update(request, id):
   except Device.DoesNotExist:
     raise Http404("Device Not Found")
   if request.method == 'POST':
-    device_chip = request.POST.get('id')
+    device_chip = request.POST.get('chip-id')
 
     device.chip_id = device_chip
     device.save()
+    notify(request, "info", f"Device updated", f"Device {device_chip} is now available")
     return redirect('device_detail', id=device.chip_id)
   return redirect('device_list')
 

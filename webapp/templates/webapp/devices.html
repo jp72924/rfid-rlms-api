@@ -11,9 +11,9 @@
 
       <div class="inner-form">
         <div class="m-group">
-          <input class="m-input" id="id" type="text" name="id" value="{{ query.chip_id }}" aria-labelledby="label-id">
-          <label for="id" class="m-label" id="label-id">
-            <div class="m-label-text">ID</div>
+          <input class="m-input" id="chip-id" type="text" name="chip-id" value="{{ query.chip_id }}" aria-labelledby="label-chip-id">
+          <label for="chip-id" class="m-label" id="label-chip-id">
+            <div class="m-label-text">Chip</div>
           </label>
         </div>
       </div>
@@ -61,22 +61,22 @@
   const formAcceptButton = document.getElementById('accept-form-button');
   const formCancelButton = document.getElementById('cancel-form-button');
 
-  const id = document.getElementById('id');
+  const chipID = document.getElementById('chip-id');
 
   openFormButton.addEventListener('click', () => {
     formAcceptButton.innerText = 'Create';
     popupBackground.style.display = 'flex';
     form.action = '{% url 'device_create' %}';
 
-    id.setAttribute('value', '');
+    chipID.setAttribute('value', '');
   });
 
   formCancelButton.addEventListener('click', () => {
     popupBackground.style.display = 'none';
   });
 
-  id.addEventListener('input', () => {
-    id.setAttribute('value', id.value);
+  chipID.addEventListener('input', () => {
+    chipID.setAttribute('value', chipID.value);
   });
 </script>
 {% endblock content %}

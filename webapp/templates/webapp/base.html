@@ -1,4 +1,5 @@
 {% load static %}
+{% load custom_tags %}
 
 <!DOCTYPE html>
 <html>
@@ -42,11 +43,12 @@
 <body>
     {% if request.session.message %}
     <div class="full-height notification-panel">
-        <div class="notification-card no-select">
+        <div class="notification-card no-select {% if request.session.message.type == 'info' %}notification-info{% elif request.session.message.type == 'success' %}notification-success{% elif request.session.message.type == 'danger' %}notification-danger{% endif %}">
             <p class="notification-heading">{{ request.session.message.title }}</p>
             <p class="notification-content">{{ request.session.message.content }}</p>
         </div>
     </div>
+    {% remove_from_session request "message" %}
     {% endif %}
 
     <div class="layout d-flex">

@@ -13,7 +13,6 @@
     border-radius: 0.375rem;
     box-shadow: var(--accent-shadow);
     overflow: hidden;
-    border-left: 0.375rem solid var(--color-blue);
     z-index: 2;
 }
 
@@ -31,7 +30,30 @@
 .notification-card .notification-heading {
     margin-bottom: 1rem;
     font-weight: bold;
+}
+
+.notification-info {
+    border-left: 0.375rem solid var(--color-blue);
+}
+
+.notification-info .notification-heading {
     color: var(--color-dark-blue);
+}
+
+.notification-success {
+    border-left: 0.375rem solid var(--color-green);
+}
+
+.notification-success .notification-heading {
+    color: var(--color-dark-green);
+}
+
+.notification-danger {
+    border-left: 0.375rem solid var(--color-red);
+}
+
+.notification-danger .notification-heading {
+    color: var(--color-red);
 }
 
 /* ----------------------------------------------

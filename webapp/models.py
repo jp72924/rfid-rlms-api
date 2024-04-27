@@ -43,7 +43,6 @@ class Record(models.Model):
       ('info', 'Info'),
       ('warning', 'Warning'),
       ('error', 'Error'),
-      ('critical', 'Critical'),
   ])
   message = models.TextField()
   

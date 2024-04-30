@@ -214,7 +214,7 @@ def device_create(request):
 
     device = Device(chip_id=device_chip)
     device.save()
-  notify(request, "success", f"New device added", f"Device {device_chip} is now available")
+    notify(request, "success", f"New device added", f"{device_chip} is now available")
   return redirect('device_list')
 
 
@@ -229,7 +229,7 @@ def device_update(request, id):
 
     device.chip_id = device_chip
     device.save()
-    notify(request, "info", f"Device updated", f"Device {device_chip} is now available")
+    notify(request, "info", f"Device updated", f"Record updated from {id} to {device_chip}")
     return redirect('device_detail', id=device.chip_id)
   return redirect('device_list')
 
@@ -241,6 +241,7 @@ def device_delete(request, id):
   except Device.DoesNotExist:
     raise Http404("Device Not Found")
   device.delete()
+  notify(request, "danger", f"Device removed", f"{device.chip_id} is not longer available")
   return redirect('device_list')
 
 # Groups
@@ -274,6 +275,7 @@ def group_create(request):
     group = CustomGroup.objects.create(name=group_name)
     group.authority = group_authority
     group.save()
+    notify(request, "success", f"New group added", f"{group_name} is now available")
   return redirect('group_list')
 
 
@@ -290,6 +292,7 @@ def group_update(request, name):
     group.name = group_name
     group.authority = group_authority
     group.save()
+    notify(request, "info", f"Group updated", f"{group_name} now has access to authority {group_authority} features")
     return redirect('group_detail', name=group.name)
   return redirect('group_list')
 
@@ -301,6 +304,7 @@ def group_delete(request, name):
   except CustomGroup.DoesNotExist:
     raise Http404("CustomGroup Not Found")
   group.delete()
+  notify(request, "danger", f"Group removed", f"{name} is not longer available")
   return redirect('group_list')
 
 # Locks
@@ -336,6 +340,7 @@ def lock_create(request):
     
     lock = Lock(name=lock_name, device=lock_device, min_auth=lock_auth)
     lock.save()
+    notify(request, "success", f"New lock added", f"{lock_name} is linked to {lock_device.chip_id}, authority {lock_auth} or higher is required for access")
   return redirect('lock_list')
 
 
@@ -354,6 +359,7 @@ def lock_update(request, name):
     lock.device = lock_device
     lock.min_auth = lock_auth
     lock.save()
+    notify(request, "info", f"Lock updated", f"{lock_name} is now linked to {lock_device.chip_id}, authority {lock_auth} or higher is required for access")
     return redirect('lock_detail', name=lock.name)
   return redirect('lock_list')
 
@@ -365,6 +371,7 @@ def lock_delete(request, name):
   except Lock.DoesNotExist:
     raise Http404("Lock Not Found")
   lock.delete()
+  notify(request, "danger", f"Lock removed", f"{lock.name} is no longer linked to {lock.device.chip_id}, it is no longer accessible")
   return redirect('lock_list')
 
 # Users
@@ -402,6 +409,7 @@ def user_create(request):
     user = User.objects.create_user(username=user_name, password=user_password, email=user_email)
     user.groups.clear()
     user.groups.add(user_group)
+    notify(request, "success", f"New user added", f"{user_name} added to {user_group.name} group")
   return redirect('user_list')
 
 
@@ -423,6 +431,7 @@ def user_update(request, username):
     user.groups.clear()
     user.groups.add(user_group)
     user.save()
+    notify(request, "info", f"User updated", f"{user_name} updated to {user_group.name} group")
     return redirect('user_detail', username=user.username)
   return redirect('user_list')
 
@@ -431,9 +440,11 @@ def user_update(request, username):
 def user_delete(request, username):
   try:
     user = User.objects.get(username=username)
+    user_group = user.groups.first()
   except User.DoesNotExist:
     raise Http404("User Not Found")
   user.delete()
+  notify(request, "danger", f"User removed", f"{user.username} added to {user_group.name} group")
   return redirect('user_list')
 
 

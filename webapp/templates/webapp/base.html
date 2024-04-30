@@ -43,7 +43,7 @@
 <body>
     {% if request.session.message %}
     <div class="full-height notification-panel">
-        <div class="notification-card no-select {% if request.session.message.type == 'info' %}notification-info{% elif request.session.message.type == 'success' %}notification-success{% elif request.session.message.type == 'danger' %}notification-danger{% endif %}">
+        <div class="notification-card no-select {% if request.session.message.type == 'info' %}notification-info{% elif request.session.message.type == 'success' %}notification-success{% elif request.session.message.type == 'danger' %}notification-danger{% elif request.session.message.type == 'warning' %}notification-warning{% endif %}">
             <p class="notification-heading">{{ request.session.message.title }}</p>
             <p class="notification-content">{{ request.session.message.content }}</p>
         </div>

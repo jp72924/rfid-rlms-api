@@ -92,7 +92,7 @@ def login_view(request):
         return redirect('booking')  # Redirect to your homepage
       else:
         # Login failed
-        notify(request, "info", 'Login Failed', 'Username or password was incorrect')
+        notify(request, "danger", 'Login failed', 'Username or password was incorrect')
   
     return render(request, 'webapp/login.html')
   return redirect('booking')

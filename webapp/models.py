@@ -37,17 +37,20 @@ class Card(models.Model):
 
 
 class Record(models.Model):
+  
+  class Type(models.TextChoices):
+        CREATE = 'create', 'Create'
+        UPDATE = 'update', 'Update'
+        DELETE = 'delete', 'Delete'
+        LOGIN = 'login', 'Login'
+        LOGOUT = 'logout', 'Logout'
+
   timestamp = models.DateTimeField(auto_now_add=True)
-  level = models.CharField(max_length=50, choices=[
-      ('debug', 'Debug'),
-      ('info', 'Info'),
-      ('warning', 'Warning'),
-      ('error', 'Error'),
-  ])
+  type = models.CharField(max_length=6, choices=Type.choices)
   message = models.TextField()
   
   # Optional fields
-  # user = models.ForeignKey('User', on_delete=models.SET_NULL, blank=True, null=True)
+  user = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True)
   # app_name = models.CharField(max_length=255, blank=True)
   # Additional data fields can be added based on your needs
 
@@ -55,4 +58,4 @@ class Record(models.Model):
     ordering = ['-timestamp']  # Order logs by most recent first
 
   def __str__(self):
-    return f"{self.timestamp} - {self.level}: {self.message[:50]}"  # Truncate message for display
+    return f"{self.timestamp} - {self.type}: {self.message[:50]}"  # Truncate message for display

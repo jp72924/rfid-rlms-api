@@ -1,3 +1,4 @@
+from email import message
 from django.contrib.auth import authenticate
 from django.contrib.auth import login
 from django.contrib.auth import logout
@@ -35,6 +36,11 @@ def convert_to_django_date(datetime_str):
 def notify(request, type, title, content):
   message = {'type': type, 'title': title, 'content': content}
   request.session['message'] = message
+
+
+def log(request, type, message):
+  record = Record(type=type, message=message, user=request.user)
+  record.save()
   
   
 def authorize(request):
@@ -68,7 +74,7 @@ def authorize(request):
       2: "DO NOT DISTURB",
       0: "NOT AUTHORIZED"
   }[authorized]
-
+  
   return JsonResponse({"status": authorized, "message": response_message})
 
 # Helper function to check authorization logic
@@ -88,7 +94,12 @@ def login_view(request):
       user = authenticate(request, username=username, password=password)
       if user:
         login(request, user)
-        notify(request, "info", f"Welcome, @{username}!", 'You are successfully logged in')
+        
+        title = f"Welcome, @{username}!"
+        message = "You are successfully logged in"
+        
+        notify(request, "info", title, message)
+        log(request, Record.Type.LOGIN, message)
         return redirect('booking')  # Redirect to your homepage
       else:
         # Login failed
@@ -98,7 +109,13 @@ def login_view(request):
   return redirect('booking')
 
 @login_required
-def logout_view(request):
+def logout_view(request):  
+  title = f"Goodbye, until next time!"
+  message = "You are successfully logged out"
+        
+  notify(request, "info", title, message)
+  log(request, Record.Type.LOGOUT, message)
+  
   logout(request)
   # Optionally redirect to a specific page after logout
   return redirect('login')  # Replace 'login' with your login URL name
@@ -147,7 +164,12 @@ def card_create(request):
 
     card = Card(uuid=card_uuid, lock=card_lock, due_date=card_due_date, user=card_user)
     card.save()
-    notify(request, "success", f"New card added", f"Access granted to @{card_user.username} for {card_lock.name}")
+    
+    title = f"New card added"
+    message = f"Access granted to @{card_user.username} for {card_lock.name}"
+    
+    notify(request, "success", title, message)
+    log(request, Record.Type.CREATE, message)
   return redirect('card_list')
 
 
@@ -168,7 +190,12 @@ def card_update(request, uuid):
     card.due_date = card_due_date
     card.user = card_user
     card.save()
-    notify(request, "info", f"Card updated", f"@{card_user.username} now has access to {card_lock.name} until {card_due_date}")
+    
+    title = f"Card updated"
+    message = f"@{card_user.username} now has access to {card_lock.name} until {card_due_date}"
+    
+    notify(request, "info", title, message)
+    log(request, Record.Type.UPDATE, message)
     return redirect('card_detail', uuid=card.uuid)
   return redirect('card_list')
 
@@ -182,7 +209,11 @@ def card_delete(request, uuid):
   except Card.DoesNotExist:
     raise Http404("Card Not Found")
   card.delete()
-  notify(request, "danger", f"Card removed", f"Access revoked to @{card_user.username} for {card_lock.name}")
+  title = f"Card removed"
+  message = f"Access revoked to @{card_user.username} for {card_lock.name}"
+  
+  notify(request, "danger", title, message)
+  log(request, Record.Type.DELETE, message)
   return redirect('card_list')
 
 # Devices
@@ -214,7 +245,12 @@ def device_create(request):
 
     device = Device(chip_id=device_chip)
     device.save()
-    notify(request, "success", f"New device added", f"{device_chip} is now available")
+    
+    title = f"New device added"
+    message = f"{device_chip} is now available"
+    
+    notify(request, "success", title, message)
+    log(request, Record.Type.CREATE, message)
   return redirect('device_list')
 
 
@@ -229,7 +265,12 @@ def device_update(request, id):
 
     device.chip_id = device_chip
     device.save()
-    notify(request, "info", f"Device updated", f"Record updated from {id} to {device_chip}")
+    
+    title = f"Device updated"
+    message = f"Record updated from {id} to {device_chip}"
+    
+    notify(request, "info", title, message)
+    log(request, Record.Type.UPDATE, message)
     return redirect('device_detail', id=device.chip_id)
   return redirect('device_list')
 
@@ -241,7 +282,12 @@ def device_delete(request, id):
   except Device.DoesNotExist:
     raise Http404("Device Not Found")
   device.delete()
-  notify(request, "danger", f"Device removed", f"{device.chip_id} is not longer available")
+  
+  title = f"Device removed"
+  message = f"{device.chip_id} is not longer available"
+  
+  notify(request, "danger", title, message)
+  log(request, Record.Type.DELETE, message)
   return redirect('device_list')
 
 # Groups
@@ -275,7 +321,12 @@ def group_create(request):
     group = CustomGroup.objects.create(name=group_name)
     group.authority = group_authority
     group.save()
-    notify(request, "success", f"New group added", f"{group_name} is now available")
+    
+    title = f"New group added"
+    message = f"{group_name} is now available"
+    
+    notify(request, "success", title, message)
+    log(request, Record.Type.CREATE, message)
   return redirect('group_list')
 
 
@@ -292,7 +343,12 @@ def group_update(request, name):
     group.name = group_name
     group.authority = group_authority
     group.save()
-    notify(request, "info", f"Group updated", f"{group_name} now has access to authority {group_authority} features")
+    
+    title = f"Group updated"
+    message = f"{group_name} now has access to authority {group_authority} features"
+    
+    notify(request, "info", title, message)
+    log(request, Record.Type.UPDATE, message)
     return redirect('group_detail', name=group.name)
   return redirect('group_list')
 
@@ -304,7 +360,12 @@ def group_delete(request, name):
   except CustomGroup.DoesNotExist:
     raise Http404("CustomGroup Not Found")
   group.delete()
-  notify(request, "danger", f"Group removed", f"{name} is not longer available")
+  
+  title = f"Group removed"
+  message = f"{name} is not longer available"
+  
+  notify(request, "danger", title, message)
+  log(request, Record.Type.DELETE, message)
   return redirect('group_list')
 
 # Locks
@@ -340,7 +401,12 @@ def lock_create(request):
     
     lock = Lock(name=lock_name, device=lock_device, min_auth=lock_auth)
     lock.save()
-    notify(request, "success", f"New lock added", f"{lock_name} is linked to {lock_device.chip_id}, authority {lock_auth} or higher is required for access")
+    
+    title = f"New lock added"
+    message = f"{lock_name} is linked to {lock_device.chip_id}, authority {lock_auth} or higher is required for access"
+
+    notify(request, "success", title, message)
+    log(request, Record.Type.CREATE, message)
   return redirect('lock_list')
 
 
@@ -359,7 +425,12 @@ def lock_update(request, name):
     lock.device = lock_device
     lock.min_auth = lock_auth
     lock.save()
-    notify(request, "info", f"Lock updated", f"{lock_name} is now linked to {lock_device.chip_id}, authority {lock_auth} or higher is required for access")
+    
+    title = f"Lock updated"
+    message = f"{lock_name} is now linked to {lock_device.chip_id}, authority {lock_auth} or higher is required for access"
+    
+    notify(request, "info", title, message)
+    log(request, Record.Type.UPDATE, message)
     return redirect('lock_detail', name=lock.name)
   return redirect('lock_list')
 
@@ -371,7 +442,11 @@ def lock_delete(request, name):
   except Lock.DoesNotExist:
     raise Http404("Lock Not Found")
   lock.delete()
-  notify(request, "danger", f"Lock removed", f"{lock.name} is no longer linked to {lock.device.chip_id}, it is no longer accessible")
+  title = f"Lock removed"
+  message = f"{lock.name} is no longer linked to {lock.device.chip_id}, it is no longer accessible"
+  
+  notify(request, "danger", title, message)
+  log(request, Record.Type.DELETE, message)
   return redirect('lock_list')
 
 # Users
@@ -409,7 +484,11 @@ def user_create(request):
     user = User.objects.create_user(username=user_name, password=user_password, email=user_email)
     user.groups.clear()
     user.groups.add(user_group)
-    notify(request, "success", f"New user added", f"{user_name} added to {user_group.name} group")
+    title = f"New user added"
+    message = f"@{user_name} added to {user_group.name} group"
+    
+    notify(request, "success", title, message)
+    log(request, Record.Type.CREATE, message)
   return redirect('user_list')
 
 
@@ -431,7 +510,12 @@ def user_update(request, username):
     user.groups.clear()
     user.groups.add(user_group)
     user.save()
-    notify(request, "info", f"User updated", f"{user_name} updated to {user_group.name} group")
+    
+    title = f"User updated"
+    message = f"@{user_name} updated to {user_group.name} group"
+    
+    notify(request, "info", title, message)
+    log(request, Record.Type.UPDATE, message)
     return redirect('user_detail', username=user.username)
   return redirect('user_list')
 
@@ -444,7 +528,11 @@ def user_delete(request, username):
   except User.DoesNotExist:
     raise Http404("User Not Found")
   user.delete()
-  notify(request, "danger", f"User removed", f"{user.username} added to {user_group.name} group")
+  title = f"User removed"
+  message = f"@{user.username} added to {user_group.name} group"
+  
+  notify(request, "danger", title, message)
+  log(request, Record.Type.DELETE, message)
   return redirect('user_list')
 
 

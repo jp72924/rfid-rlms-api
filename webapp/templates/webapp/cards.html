@@ -90,7 +90,7 @@
         <td>{{ card.lock.name }}</td>
         <td>{{ card.created_at|date:'Y-m-d H:i:s' }}</td>
         <td>{{ card.due_date|date:'Y-m-d H:i:s' }}</td>
-        <td>{{ card.user.username }}</td>
+        <td>@{{ card.user.username }}</td>
         <td>
           <button class="btn btn-more btn-edit" onclick="location.href='{% url 'card_detail' uuid=card.uuid %}'"><i
               class="bi bi-pencil-fill"></i></button>

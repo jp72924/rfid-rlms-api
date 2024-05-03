@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ doc_name}}</title>
+
+    <style>
+        :root {
+            --color-blue: #568af2;
+            --color-gray: #cccccc;
+
+            --color-light-blue: #e7eefd;
+            --color-light-gray: #f9fafc;
+
+            --color-dark-blue: #4975ce;
+
+            --default-font: 'Montserrat';
+            --alt-font: 'Poppins';
+            --safe-font: sans-serif;
+        }
+
+        * {
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--default-font, var(--alt-font, var(--safe-font)));
+            font-size: 0.8rem;
+        }
+
+        .table-frame {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+        }
+
+        table tr {
+            height: 3rem;
+        }
+
+        tbody tr:hover {
+            background-color: var(--color-light-blue);
+            color: var(--color-dark-blue)
+        }
+
+        thead th {
+            border-bottom: 2px solid var(--color-blue);
+            color: var(--color-blue);
+            user-select: none;
+
+            text-align: left;
+        }
+
+        th:last-child,
+        td:last-child {
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="table-frame">
+        <table>
+            <thead>
+                <tr>
+                    <th>Device</th>
+                    <th>Lock Pin</th>
+                    <th>Name</th>
+                    <th>Card</th>
+                    <th>User</th>
+                    <th>Timestamp</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in access_records %}
+                <tr>
+                    <td>{{ record.lock.device.chip_id }}</td>
+                    <td>{{ record.is_locked }}</td>
+                    <td>{{ record.lock.name }}</td>
+                    <td>{{ record.card.uuid }}</td>
+                    <td>@{{ record.card.user.username }}</td>
+                    <td>{{ record.timestamp }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+
+</body>
+
+</html>

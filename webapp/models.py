@@ -36,7 +36,21 @@ class Card(models.Model):
     return timezone.now() > self.due_date # datetime.now().astimezone(self.due_date.tzinfo) > self.due_date
 
 
-class Record(models.Model):
+class AccessRecord(models.Model):
+
+  timestamp = models.DateTimeField(auto_now_add=True)
+  is_locked = models.BooleanField(default=False)
+  card = models.ForeignKey(Card, on_delete=models.CASCADE, null=True)
+  lock = models.ForeignKey(Lock, on_delete=models.CASCADE, null=True)
+
+  class Meta:
+    ordering = ['-timestamp']  # Order logs by most recent first
+
+  def __str__(self):
+    return f"{self.timestamp} - "  # Truncate message for display
+
+
+class ActivityRecord(models.Model):
   
   class Type(models.TextChoices):
         CREATE = 'create', 'Create'
@@ -51,7 +65,6 @@ class Record(models.Model):
   
   # Optional fields
   user = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True)
-  # app_name = models.CharField(max_length=255, blank=True)
   # Additional data fields can be added based on your needs
 
   class Meta:

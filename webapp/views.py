@@ -1,18 +1,22 @@
-from email import message
+from fileinput import filename
 from django.contrib.auth import authenticate
 from django.contrib.auth import login
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.http import Http404
+from django.http import HttpResponse
+from django.http import FileResponse
 from django.http import JsonResponse
+from django.http import Http404
 from django.shortcuts import redirect
 from django.shortcuts import render
-from webapp.models import CustomGroup
+from webapp.models import AccessRecord
+from webapp.models import ActivityRecord
 from webapp.models import Card
+from webapp.models import CustomGroup
 from webapp.models import Device
 from webapp.models import Lock
-from webapp.models import Record
+from weasyprint import HTML
 
 from datetime import datetime
 
@@ -39,8 +43,8 @@ def notify(request, type, title, content):
 
 
 def log(request, type, message):
-  record = Record(type=type, message=message, user=request.user)
-  record.save()
+  activity_record = ActivityRecord(type=type, message=message, user=request.user)
+  activity_record.save()
   
   
 def authorize(request):
@@ -75,6 +79,9 @@ def authorize(request):
       0: "NOT AUTHORIZED"
   }[authorized]
   
+  lock = Lock.objects.filter(device__chip_id=device_id).first()
+  access_record = AccessRecord(is_locked=bool(lock_status), card=card, lock=lock)
+  access_record.save()
   return JsonResponse({"status": authorized, "message": response_message})
 
 # Helper function to check authorization logic
@@ -99,7 +106,7 @@ def login_view(request):
         message = "You are successfully logged in"
         
         notify(request, "info", title, message)
-        log(request, Record.Type.LOGIN, message)
+        log(request, ActivityRecord.Type.LOGIN, message)
         return redirect('booking')  # Redirect to your homepage
       else:
         # Login failed
@@ -110,11 +117,11 @@ def login_view(request):
 
 @login_required
 def logout_view(request):  
-  title = f"Goodbye, until next time!"
+  # title = f"Goodbye, until next time!"
   message = "You are successfully logged out"
         
-  notify(request, "info", title, message)
-  log(request, Record.Type.LOGOUT, message)
+  # notify(request, "info", title, message)
+  log(request, ActivityRecord.Type.LOGOUT, message)
   
   logout(request)
   # Optionally redirect to a specific page after logout
@@ -169,7 +176,7 @@ def card_create(request):
     message = f"Access granted to @{card_user.username} for {card_lock.name}"
     
     notify(request, "success", title, message)
-    log(request, Record.Type.CREATE, message)
+    log(request, ActivityRecord.Type.CREATE, message)
   return redirect('card_list')
 
 
@@ -195,7 +202,7 @@ def card_update(request, uuid):
     message = f"@{card_user.username} now has access to {card_lock.name} until {card_due_date}"
     
     notify(request, "info", title, message)
-    log(request, Record.Type.UPDATE, message)
+    log(request, ActivityRecord.Type.UPDATE, message)
     return redirect('card_detail', uuid=card.uuid)
   return redirect('card_list')
 
@@ -213,7 +220,7 @@ def card_delete(request, uuid):
   message = f"Access revoked to @{card_user.username} for {card_lock.name}"
   
   notify(request, "danger", title, message)
-  log(request, Record.Type.DELETE, message)
+  log(request, ActivityRecord.Type.DELETE, message)
   return redirect('card_list')
 
 # Devices
@@ -250,7 +257,7 @@ def device_create(request):
     message = f"{device_chip} is now available"
     
     notify(request, "success", title, message)
-    log(request, Record.Type.CREATE, message)
+    log(request, ActivityRecord.Type.CREATE, message)
   return redirect('device_list')
 
 
@@ -270,7 +277,7 @@ def device_update(request, id):
     message = f"Record updated from {id} to {device_chip}"
     
     notify(request, "info", title, message)
-    log(request, Record.Type.UPDATE, message)
+    log(request, ActivityRecord.Type.UPDATE, message)
     return redirect('device_detail', id=device.chip_id)
   return redirect('device_list')
 
@@ -287,7 +294,7 @@ def device_delete(request, id):
   message = f"{device.chip_id} is not longer available"
   
   notify(request, "danger", title, message)
-  log(request, Record.Type.DELETE, message)
+  log(request, ActivityRecord.Type.DELETE, message)
   return redirect('device_list')
 
 # Groups
@@ -326,7 +333,7 @@ def group_create(request):
     message = f"{group_name} is now available"
     
     notify(request, "success", title, message)
-    log(request, Record.Type.CREATE, message)
+    log(request, ActivityRecord.Type.CREATE, message)
   return redirect('group_list')
 
 
@@ -348,7 +355,7 @@ def group_update(request, name):
     message = f"{group_name} now has access to authority {group_authority} features"
     
     notify(request, "info", title, message)
-    log(request, Record.Type.UPDATE, message)
+    log(request, ActivityRecord.Type.UPDATE, message)
     return redirect('group_detail', name=group.name)
   return redirect('group_list')
 
@@ -365,7 +372,7 @@ def group_delete(request, name):
   message = f"{name} is not longer available"
   
   notify(request, "danger", title, message)
-  log(request, Record.Type.DELETE, message)
+  log(request, ActivityRecord.Type.DELETE, message)
   return redirect('group_list')
 
 # Locks
@@ -406,7 +413,7 @@ def lock_create(request):
     message = f"{lock_name} is linked to {lock_device.chip_id}, authority {lock_auth} or higher is required for access"
 
     notify(request, "success", title, message)
-    log(request, Record.Type.CREATE, message)
+    log(request, ActivityRecord.Type.CREATE, message)
   return redirect('lock_list')
 
 
@@ -430,7 +437,7 @@ def lock_update(request, name):
     message = f"{lock_name} is now linked to {lock_device.chip_id}, authority {lock_auth} or higher is required for access"
     
     notify(request, "info", title, message)
-    log(request, Record.Type.UPDATE, message)
+    log(request, ActivityRecord.Type.UPDATE, message)
     return redirect('lock_detail', name=lock.name)
   return redirect('lock_list')
 
@@ -446,7 +453,7 @@ def lock_delete(request, name):
   message = f"{lock.name} is no longer linked to {lock.device.chip_id}, it is no longer accessible"
   
   notify(request, "danger", title, message)
-  log(request, Record.Type.DELETE, message)
+  log(request, ActivityRecord.Type.DELETE, message)
   return redirect('lock_list')
 
 # Users
@@ -488,7 +495,7 @@ def user_create(request):
     message = f"@{user_name} added to {user_group.name} group"
     
     notify(request, "success", title, message)
-    log(request, Record.Type.CREATE, message)
+    log(request, ActivityRecord.Type.CREATE, message)
   return redirect('user_list')
 
 
@@ -515,7 +522,7 @@ def user_update(request, username):
     message = f"@{user_name} updated to {user_group.name} group"
     
     notify(request, "info", title, message)
-    log(request, Record.Type.UPDATE, message)
+    log(request, ActivityRecord.Type.UPDATE, message)
     return redirect('user_detail', username=user.username)
   return redirect('user_list')
 
@@ -532,13 +539,37 @@ def user_delete(request, username):
   message = f"@{user.username} added to {user_group.name} group"
   
   notify(request, "danger", title, message)
-  log(request, Record.Type.DELETE, message)
+  log(request, ActivityRecord.Type.DELETE, message)
   return redirect('user_list')
 
 
 @login_required
 def logs(request):
   view = 'logs'
-  records = Record.objects.all()
-  context = {'view': view, 'records': records}
+  activity_records = ActivityRecord.objects.all()
+  context = {'view': view, 'activity_records': activity_records}
   return render(request, 'webapp/logs.html', context)
+
+
+def report(request, name):
+    current_time = datetime.now()
+    timestamp = current_time.strftime("%Y%m%d")
+    
+    doc_name = f"{name} Access Log"
+    filename = f"{name.upper()}_{timestamp}.pdf"
+  
+    # Get data for the PDF (from model, queryset, etc.)
+    access_records = AccessRecord.objects.filter(lock__name=name)
+    context = {'access_records': access_records, 'doc_name': doc_name}
+    
+    # Render the HTML template with the data
+    html_template = render(request, 'webapp/report.html', context)
+
+    # Generate the PDF using Weasyprint
+    pdf = HTML(string=html_template.content).write_pdf()
+
+    # Set the response headers for PDF download
+    response = HttpResponse(pdf, content_type='application/pdf')
+    response['Content-Disposition'] = 'filename="{}"'.format(filename)
+
+    return response

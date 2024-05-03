@@ -67,6 +67,8 @@
         <td>{{ lock.min_auth }}</td>
         <td>{{ lock.device.chip_id }}</td>
         <td>
+          <button class="btn btn-more btn-edit" onclick="window.open('{% url 'report' name=lock.name %}', '_blank')"><i
+              class="bi bi-file-earmark-fill"></i></button>
           <button class="btn btn-more btn-edit" onclick="location.href='{% url 'lock_detail' name=lock.name %}'"><i
               class="bi bi-pencil-fill"></i></button>
           <button class="btn btn-more btn-delete" onclick="location.href='{% url 'lock_delete' name=lock.name %}'"><i

@@ -5,7 +5,6 @@ from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http import HttpResponse
-from django.http import FileResponse
 from django.http import JsonResponse
 from django.http import Http404
 from django.shortcuts import redirect
@@ -483,12 +482,14 @@ def user_detail(request, username):
 @login_required
 def user_create(request):  
   if request.method == 'POST':
+    user_first_name = request.POST.get('first-name')
+    user_last_name = request.POST.get('last-name')
     user_name = request.POST.get('username')
     user_password = request.POST.get('password')
     user_email = request.POST.get('email')
     user_group = CustomGroup.objects.get(name=request.POST.get('group'))
     
-    user = User.objects.create_user(username=user_name, password=user_password, email=user_email)
+    user = User.objects.create_user(username=user_name, password=user_password, email=user_email, first_name=user_first_name, last_name=user_last_name)
     user.groups.clear()
     user.groups.add(user_group)
     title = f"New user added"
@@ -506,6 +507,8 @@ def user_update(request, username):
   except User.DoesNotExist:
     raise Http404("User Not Found")
   if request.method == 'POST':
+    user_first_name = request.POST.get('first-name')
+    user_last_name = request.POST.get('last-name')
     user_name = request.POST.get('username')
     user_password = request.POST.get('password')
     user_email = request.POST.get('email')
@@ -514,6 +517,8 @@ def user_update(request, username):
     user.username = user_name
     user.set_password(user_password)
     user.email = user_email
+    user.first_name = user_first_name
+    user.last_name = user_last_name
     user.groups.clear()
     user.groups.add(user_group)
     user.save()

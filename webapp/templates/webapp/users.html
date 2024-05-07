@@ -11,6 +11,20 @@
 
       <div class="inner-form">
         <div class="m-group">
+          <input class="m-input" id="first-name" type="text" name="first-name" value="{{ query.first_name }}" aria-labelledby="label-first-name">
+          <label for="first-name" class="m-label" id="label-first-name">
+            <div class="m-label-text">First name</div>
+          </label>
+        </div>
+
+        <div class="m-group">
+          <input class="m-input" id="last-name" type="text" name="last-name" value="{{ query.last_name }}" aria-labelledby="label-last-name">
+          <label for="last-name" class="m-label" id="label-last-name">
+            <div class="m-label-text">Last name</div>
+          </label>
+        </div>
+
+        <div class="m-group">
           <input class="m-input" id="username" type="text" name="username" value="{{ query.username }}" aria-labelledby="label-username">
           <label for="username" class="m-label" id="label-username">
             <div class="m-label-text">Username</div>
@@ -60,6 +74,8 @@
     <thead class="thead">
       <tr class="tr">
         <th class="no-select">ID</th>
+        <th class="no-select">Last name</th>
+        <th class="no-select">First name</th>
         <th class="no-select">Username</th>
         <th class="no-select">E-mail</th>
         <th class="no-select">Group</th>
@@ -70,7 +86,9 @@
       {% for user in users %}
       <tr class="tr">
         <td>{{ user.id }}</td>
-        <td>{{ user.username }}</td>
+        <td>{{ user.last_name }}</td>
+        <td>{{ user.first_name }}</td>
+        <td>@{{ user.username }}</td>
         <td>{{ user.email }}</td>
         <td>{{ user.groups.all|first }}</td>
         <td>
@@ -93,6 +111,8 @@
   const formAcceptButton = document.getElementById('accept-form-button');
   const formCancelButton = document.getElementById('cancel-form-button');
 
+  const firstName = document.getElementById('first-name');
+  const lastName = document.getElementById('last-name');
   const username = document.getElementById('username');
   const password = document.getElementById('password');
   const email = document.getElementById('email');
@@ -103,6 +123,8 @@
     popupBackground.style.display = 'flex';
     form.action = '{% url 'user_create' %}';
 
+    firstName.setAttribute('value', '');
+    lastName.setAttribute('value', '');
     username.setAttribute('value', '');
     password.setAttribute('value', '');
     email.setAttribute('value', '');
@@ -113,6 +135,14 @@
     popupBackground.style.display = 'none';
   });
 
+  firstName.addEventListener('input', () => {
+    firstName.setAttribute('value', firstName.value);
+  });
+
+  lastName.addEventListener('input', () => {
+    lastName.setAttribute('value', lastName.value);
+  });
+  
   username.addEventListener('input', () => {
     username.setAttribute('value', username.value);
   });

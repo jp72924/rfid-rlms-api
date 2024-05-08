@@ -19,20 +19,20 @@
       <div class="inner-form">
         <input id="uuid" type="hidden" name="uuid" value="">
 
-        <div class="m-group">
-          <input class="m-input" id="created-at" type="datetime-local" name="created-at"
+        <div class="md-group">
+          <input class="md-input" id="created-at" type="datetime-local" name="created-at"
             value="{% if query %}{{ query.created_at|date:'Y-m-d' }}T{{ query.created_at|date:'H:i' }}{% else %}{% now 'Y-m-d' %}T{% now 'H:i' %}{% endif %}"
             aria-labelledby="label-created-at" disabled>
-          <label for="created-at" class="m-label" id="label-created-at">
-            <div class="m-label-text">Created at</div>
+          <label for="created-at" class="md-label" id="label-created-at">
+            <div class="md-label-text">Created at</div>
           </label>
         </div>
 
-        <div class="m-group">
-          <input class="m-input" list="locks" id="lock" name="lock" value="{{ query.lock.id }}"
+        <div class="md-group">
+          <input class="md-input" list="locks" id="lock" name="lock" value="{{ query.lock.id }}"
             aria-labelledby="label-lock">
-          <label for="lock" class="m-label" id="label-lock">
-            <div class="m-label-text">Choose a lock</div>
+          <label for="lock" class="md-label" id="label-lock">
+            <div class="md-label-text">Choose a lock</div>
           </label>
           <datalist id="locks">
             {% for lock in locks %}
@@ -41,12 +41,12 @@
           </datalist>
         </div>
 
-        <div class="m-group">
-          <input class="m-input" id="due-date" type="datetime-local" name="due-date"
+        <div class="md-group">
+          <input class="md-input" id="due-date" type="datetime-local" name="due-date"
             value="{% if query %}{{ query.due_date|date:'Y-m-d' }}T{{ query.due_date|date:'H:i' }}{% else %}{% now 'Y-m-d' %}T{% now 'H:i' %}{% endif %}"
             aria-labelledby="label-due-date">
-          <label for="due-date" class="m-label" id="label-due-date">
-            <div class="m-label-text">Due date</div>
+          <label for="due-date" class="md-label" id="label-due-date">
+            <div class="md-label-text">Due date</div>
           </label>
         </div>
       </div>

@@ -10,25 +10,31 @@
       {% csrf_token %}
 
       <div class="inner-form">
-        <div class="m-group">
-          <input class="m-input" id="name" type="text" name="name" value="{{ query.name }}" aria-labelledby="label-name">
-          <label for="name" class="m-label" id="label-name">
-            <div class="m-label-text">Name</div>
+        <div class="md-group">
+          <input class="md-input" id="name" type="text" name="name" value="{{ query.name }}" aria-labelledby="label-name">
+          <label for="name" class="md-label" id="label-name">
+            <div class="md-label-text">Name</div>
           </label>
         </div>
 
-        <div class="m-group">
-          <input class="m-input" id="auth" type="text" name="auth" value="{{ query.min_auth }}" aria-labelledby="label-auth">
-          <label for="auth" class="m-label" id="label-auth">
-            <div class="m-label-text">Min. Auth</div>
+        <div class="md-group">
+          <input class="md-input" list="lock-groups" id="lock-group" name="lock-group" value="{{ query.groups.all|first }}"
+            aria-labelledby="label-lock-group">
+          <label for="lock-group" class="md-label" id="label-lock-group">
+            <div class="md-label-text">Choose a group</div>
           </label>
+          <datalist id="lock-groups">
+            {% for group in groups %}
+            <option value="{{ group.name }}"></option>
+            {% endfor %}
+          </datalist>
         </div>
 
-        <div class="m-group">
-          <input class="m-input" list="devices" id="device" name="device" value="{{ query.device.chip_id }}"
+        <div class="md-group">
+          <input class="md-input" list="devices" id="device" name="device" value="{{ query.device.chip_id }}"
             aria-labelledby="label-device">
-          <label for="device" class="m-label" id="label-device">
-            <div class="m-label-text">Choose a device</div>
+          <label for="device" class="md-label" id="label-device">
+            <div class="md-label-text">Choose a device</div>
           </label>
           <datalist id="devices">
             {% for device in devices %}
@@ -54,8 +60,8 @@
       <tr class="tr">
         <th class="no-select">ID</th>
         <th class="no-select">Name</th>
-        <th class="no-select">Min. Auth</th>
         <th class="no-select">Device</th>
+        <th class="no-select">Lock group</th>
         <th class="no-select"><i class="bi bi-gear"></i></th>
       </tr>
     </thead>
@@ -64,8 +70,8 @@
       <tr class="tr">
         <td>{{ lock.id }}</td>
         <td>{{ lock.name }}</td>
-        <td>{{ lock.min_auth }}</td>
         <td>{{ lock.device.chip_id }}</td>
+        <td>{{ lock.groups.all|first }}</td>
         <td>
           <button class="btn btn-more btn-edit" onclick="window.open('{% url 'report' name=lock.name %}', '_blank')"><i
               class="bi bi-file-earmark-fill"></i></button>
@@ -89,8 +95,8 @@
   const formCancelButton = document.getElementById('cancel-form-button');
 
   const name = document.getElementById('name');
-  const minAuth = document.getElementById('auth');
   const device = document.getElementById('device');
+  const lockGroup = document.getElementById('lock-group');
 
   openFormButton.addEventListener('click', () => {
     formAcceptButton.innerText = 'Create';
@@ -98,8 +104,8 @@
     form.action = '{% url 'lock_create' %}';
 
     name.setAttribute('value', '');
-    minAuth.setAttribute('value', '');
     device.setAttribute('value', '');
+    lockGroup.setAttribute('value', '');
   });
 
   formCancelButton.addEventListener('click', () => {
@@ -110,12 +116,12 @@
     name.setAttribute('value', name.value);
   });
 
-  minAuth.addEventListener('input', () => {
-    minAuth.setAttribute('value', minAuth.value);
-  });
-
   device.addEventListener('input', () => {
     device.setAttribute('value', device.value);
+  });
+
+  lockGroup.addEventListener('input', () => {
+    lockGroup.setAttribute('value', lockGroup.value);
   });
 </script>
 {% endblock content %}

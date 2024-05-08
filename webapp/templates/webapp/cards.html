@@ -10,40 +10,18 @@
       {% csrf_token %}
 
       <div class="inner-form">
-        <div class="m-group">
-          <input class="m-input" id="uuid" type="text" name="uuid" value="{{ query.uuid }}" aria-labelledby="label-uuid">
-          <label for="uuid" class="m-label" id="label-uuid">
-            <div class="m-label-text">UUID</div>
+        <div class="md-group">
+          <input class="md-input" id="uuid" type="text" name="uuid" value="{{ query.uuid }}" aria-labelledby="label-uuid">
+          <label for="uuid" class="md-label" id="label-uuid">
+            <div class="md-label-text">UUID</div>
           </label>
         </div>
 
-        <div class="m-group">
-          <input class="m-input" id="created-at" type="datetime-local" name="created-at"
-            value="{% if query %}{{ query.created_at|date:'Y-m-d' }}T{{ query.created_at|date:'H:i' }}{% else %}{% now 'Y-m-d' %}T{% now 'H:i' %}{% endif %}"
-            aria-labelledby="label-created-at" disabled>
-          <label for="created-at" class="m-label" id="label-created-at">
-            <div class="m-label-text">Created at</div>
-          </label>
-        </div>
-
-        <div class="m-group">
-          <input class="m-input" list="locks" id="lock" name="lock" value="{{ query.lock.name }}"
-            aria-labelledby="label-lock">
-          <label for="lock" class="m-label" id="label-lock">
-            <div class="m-label-text">Choose a lock</div>
-          </label>
-          <datalist id="locks">
-            {% for lock in locks %}
-            <option value="{{ lock.name }}"></option>
-            {% endfor %}
-          </datalist>
-        </div>
-
-        <div class="m-group">
-          <input class="m-input" list="users" id="user" name="user" value="{{ query.user.username }}"
+        <div class="md-group">
+          <input class="md-input" list="users" id="user" name="user" value="{{ query.user.username }}"
             aria-labelledby="label-user">
-          <label for="user" class="m-label" id="label-user">
-            <div class="m-label-text">Choose a user</div>
+          <label for="user" class="md-label" id="label-user">
+            <div class="md-label-text">Choose a user</div>
           </label>
           <datalist id="users">
             {% for user in users %}
@@ -52,12 +30,21 @@
           </datalist>
         </div>
 
-        <div class="m-group">
-          <input class="m-input" id="due-date" type="datetime-local" name="due-date"
+        <div class="md-group">
+          <input class="md-input" id="created-at" type="datetime-local" name="created-at"
+            value="{% if query %}{{ query.created_at|date:'Y-m-d' }}T{{ query.created_at|date:'H:i' }}{% else %}{% now 'Y-m-d' %}T{% now 'H:i' %}{% endif %}"
+            aria-labelledby="label-created-at" disabled>
+          <label for="created-at" class="md-label" id="label-created-at">
+            <div class="md-label-text">Created at</div>
+          </label>
+        </div>
+
+        <div class="md-group">
+          <input class="md-input" id="due-date" type="datetime-local" name="due-date"
             value="{% if query %}{{ query.due_date|date:'Y-m-d' }}T{{ query.due_date|date:'H:i' }}{% else %}{% now 'Y-m-d' %}T{% now 'H:i' %}{% endif %}"
             aria-labelledby="label-due-date">
-          <label for="due-date" class="m-label" id="label-due-date">
-            <div class="m-label-text">Due date</div>
+          <label for="due-date" class="md-label" id="label-due-date">
+            <div class="md-label-text">Due date</div>
           </label>
         </div>
       </div>
@@ -76,10 +63,9 @@
     <thead class="thead">
       <tr class="tr">
         <th class="no-select">UUID</th>
-        <th class="no-select">Lock</th>
+        <th class="no-select">User</th>
         <th class="no-select">Created at</th>
         <th class="no-select">Due date</th>
-        <th class="no-select">User</th>
         <th class="no-select"><i class="bi bi-gear"></i></th>
       </tr>
     </thead>
@@ -87,10 +73,9 @@
       {% for card in cards %}
       <tr class="tr">
         <td>{{ card.uuid }}</td>
-        <td>{{ card.lock.name }}</td>
+        <td>@{{ card.user.username }}</td>
         <td>{{ card.created_at|date:'Y-m-d H:i:s' }}</td>
         <td>{{ card.due_date|date:'Y-m-d H:i:s' }}</td>
-        <td>@{{ card.user.username }}</td>
         <td>
           <button class="btn btn-more btn-edit" onclick="location.href='{% url 'card_detail' uuid=card.uuid %}'"><i
               class="bi bi-pencil-fill"></i></button>
@@ -114,7 +99,6 @@
   const uuid = document.getElementById('uuid');
   const createdAt = document.getElementById('created-at');
   const dueDate = document.getElementById('due-date');
-  const lock = document.getElementById('lock');
   const user = document.getElementById('user');
 
   openFormButton.addEventListener('click', () => {
@@ -125,7 +109,6 @@
     uuid.setAttribute('value', '');
     createdAt.setAttribute('value', datetime());
     dueDate.setAttribute('value', datetime());
-    lock.setAttribute('value', '');
   });
 
   formCancelButton.addEventListener('click', () => {
@@ -142,10 +125,6 @@
 
   dueDate.addEventListener('input', () => {
     dueDate.setAttribute('value', dueDate.value);
-  });
-
-  lock.addEventListener('input', () => {
-    lock.setAttribute('value', lock.value);
   });
 
   user.addEventListener('input', () => {

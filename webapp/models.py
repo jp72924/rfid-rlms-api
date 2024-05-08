@@ -5,8 +5,30 @@ from django.contrib.auth.models import User
 from django.contrib.auth.models import Group
 
 
-class CustomGroup(Group):
-  authority = models.IntegerField(blank=True, null=True)
+class LockGroup(models.Model):
+  name = models.CharField(max_length=255, unique=True)
+
+  def tag(self):
+    """
+    Converts a lock group name to a blog tag format (lowercase, spaces replaced with hyphens).
+
+    Args:
+        value: The string to convert.
+
+    Returns:
+        The converted string in blog tag format.
+    """
+    return "-".join(self.name.lower().strip().split())
+  
+  def __str__(self):
+    return f"{self.name}"
+
+
+class UserGroup(Group):
+  # Flag to indicate if door should open even with lock pin
+  override_lock_pin = models.BooleanField(default=False)
+  
+  lock_groups = models.ManyToManyField(LockGroup)  # Optional related_name
 
 
 class Device(models.Model):
@@ -17,8 +39,8 @@ class Device(models.Model):
 class Lock(models.Model):
   id = models.AutoField(primary_key=True)
   name = models.CharField(max_length=255, unique=True)
+  groups = models.ManyToManyField(LockGroup)  # Optional related_name
   device = models.ForeignKey(Device, on_delete=models.CASCADE, null=True)
-  min_auth = models.IntegerField(blank=True, null=True)
 
 
 class Card(models.Model):
@@ -26,8 +48,7 @@ class Card(models.Model):
   uuid = models.CharField(max_length=255, unique=True)
   created_at = models.DateTimeField(auto_now_add=True)
   due_date = models.DateTimeField(blank=True, null=True)
-  lock = models.ForeignKey(Lock, on_delete=models.CASCADE, null=True)
-  user = models.OneToOneField(User, on_delete=models.CASCADE)
+  user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
   
   def is_overdue(self):
     """

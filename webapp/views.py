@@ -107,11 +107,11 @@ def has_authorization(access_card, device_id, is_locked):
     lock_group = door_lock.groups.get()
     user_group = access_card.user.groups.get()
     authorized_group = UserGroup.objects.get(name=user_group.name)
-    authorized = lock_group in authorized_group.lock_groups.all()
+    authorized = (lock_group in authorized_group.lock_groups.all() and not access_card.is_overdue())
   except (Lock.DoesNotExist, Group.DoesNotExist, UserGroup.DoesNotExist):
     return 0  # Missing association or object not found
   
-  if authorized and is_locked and not authorized_group.override_lock_pin:
+  if authorized and (is_locked and not authorized_group.override_lock_pin):
     authorized = 2
   return authorized
 

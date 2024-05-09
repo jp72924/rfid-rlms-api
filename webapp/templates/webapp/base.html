@@ -10,9 +10,7 @@
     <!-- Google Fonts: Montserrat and Poppins -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
 
     <!-- Bootstrap Icons 1.11.3 -->
     <link rel="stylesheet" href="{% static 'css/bootstrap-icons.min.css' %}">
@@ -43,8 +41,7 @@
 <body>
     {% if request.session.message %}
     <div class="full-height notification-panel">
-        <div
-            class="notification-card no-select {% if request.session.message.type == 'info' %}notification-info{% elif request.session.message.type == 'success' %}notification-success{% elif request.session.message.type == 'danger' %}notification-danger{% elif request.session.message.type == 'warning' %}notification-warning{% endif %}">
+        <div class="notification-card no-select {% if request.session.message.type == 'info' %}notification-info{% elif request.session.message.type == 'success' %}notification-success{% elif request.session.message.type == 'danger' %}notification-danger{% elif request.session.message.type == 'warning' %}notification-warning{% endif %}">
             <p class="notification-heading">{{ request.session.message.title }}</p>
             <p class="notification-content">{{ request.session.message.content }}</p>
         </div>
@@ -56,34 +53,40 @@
         <div class="sidebar">
             <div class="inner-sidebar d-flex">
 
+                <div class="item d-flex fx-center fy-center no-select {% if view == 'booking' %}active{% endif %}">
+                    <a href="{% url 'booking' %}" class="full-width text-center"><i class="bi bi-building-fill"></i><span class="item-tag">Bookings</span></a>
+                </div>
+
                 <div class="item d-flex fx-center fy-center no-select {% if view == 'cards' %}active{% endif %}">
-                    <a href="{% url 'card_list' %}" class="full-width text-center"><i
-                            class="bi bi-credit-card-fill"></i><span class="item-tag">Cards</span></a>
+                    <a href="{% url 'card_list' %}" class="full-width text-center"><i class="bi bi-credit-card-fill"></i><span class="item-tag">Cards</span></a>
                 </div>
 
                 <div class="item d-flex fx-center fy-center no-select {% if view == 'devices' %}active{% endif %}">
-                    <a href="{% url 'device_list' %}" class="full-width text-center"><i class="bi bi-wifi"></i><span
-                            class="item-tag">Devices</span></a>
+                    <a href="{% url 'device_list' %}" class="full-width text-center"><i class="bi bi-wifi"></i><span class="item-tag">Devices</span></a>
                 </div>
 
                 <div class="item d-flex fx-center fy-center no-select {% if view == 'locks' %}active{% endif %}">
-                    <a href="{% url 'lock_list' %}" class="full-width text-center"><i
-                            class="bi bi-door-closed-fill"></i><span class="item-tag">Locks</span></a>
+                    <a href="{% url 'lock_list' %}" class="full-width text-center"><i class="bi bi-door-closed-fill"></i><span class="item-tag">Locks</span></a>
                 </div>
 
                 <div class="item d-flex fx-center fy-center no-select {% if view == 'users' %}active{% endif %}">
-                    <a href="{% url 'user_list' %}" class="full-width text-center"><i
-                            class="bi bi-person-fill"></i><span class="item-tag">User</span></a>
+                    <a href="{% url 'user_list' %}" class="full-width text-center"><i class="bi bi-person-fill"></i><span class="item-tag">User</span></a>
                 </div>
 
                 <div class="item d-flex fx-center fy-center no-select {% if view == 'lock_groups' %}active{% endif %}">
-                    <a href="{% url 'group_lock_list' %}" class="full-width text-center"><i
-                            class="bi bi-diagram-3-fill"></i><span class="item-tag">Lock Group</span></a>
+                    <a href="{% url 'group_lock_list' %}" class="full-width text-center"><i class="bi bi-diagram-3-fill"></i><span class="item-tag">Lock Group</span></a>
                 </div>
 
                 <div class="item d-flex fx-center fy-center no-select {% if view == 'user_groups' %}active{% endif %}">
-                    <a href="{% url 'group_user_list' %}" class="full-width text-center"><i
-                            class="bi bi-people-fill"></i><span class="item-tag">User Group</span></a>
+                    <a href="{% url 'group_user_list' %}" class="full-width text-center"><i class="bi bi-people-fill"></i><span class="item-tag">User Group</span></a>
+                </div>
+
+                <div class="item d-flex fx-center fy-center no-select {% if view == 'logs' %}active{% endif %}">
+                    <a href="{% url 'logs' %}" class="full-width text-center"><i class="bi bi-file-earmark-text-fill"></i><span class="item-tag">Logs</span></a>
+                </div>
+
+                <div class="item d-flex fx-center fy-center no-select">
+                    <a href="{% url 'logout' %}" class="full-width text-center"><i class="bi bi-arrow-right-square-fill"></i><span class="item-tag">Sign out</span></a>
                 </div>
             </div>
         </div>

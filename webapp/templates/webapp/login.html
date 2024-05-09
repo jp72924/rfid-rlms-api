@@ -3,7 +3,7 @@
 
 {% block content %}
 <div class="full-height d-flex fx-center fy-center">
-    <div class="full-height full-width container d-flex fx-center fy-center">
+    <div id="form-wrap" class="full-height full-width container d-flex fx-center fy-center">
         <div class="inner-wrap">
             <h2>Login</h2>
             <br>
@@ -18,13 +18,13 @@
                     </label>
                 </div>
                 <div class="md-group">
-                    <input class="md-input" id="password" type="text" name="password" value=""
+                    <input class="md-input" id="password" type="password" name="password" value=""
                         aria-labelledby="label-password">
                     <label for="password" class="md-label" id="label-password">
                         <div class="md-label-text">Password</div>
                     </label>
                 </div>
-                <button class="btn btn-new" type="submit">Sign in</button>
+                <button id="login-btn" class="btn btn-new" type="submit">Sign in</button>
             </form>
         </div>
     </div>
@@ -36,13 +36,41 @@
         box-shadow: var(--accent-shadow);
     }
 
+    #form-wrap {
+        background-color: rgba(40, 44, 52, 0.6);
+        backdrop-filter: blur(3px);
+    }
+
+    #login-btn {
+        background-color: var(--color-light-blue);
+        color: var(--color-blue);
+    }
+
     form {
         gap: 1rem;
     }
 
+    .md-input {
+        background-color: rgba(40, 44, 52, 0.7);
+        color: var(--color-light-gray);
+    }
+
+    .md-input:focus + .md-label .md-label-text {
+        background-color: var(--color-blue);
+        color: var(--color-light-gray);
+        border-radius: 0.375rem;
+    }
+
+    .md-input:focus + .md-label .md-label-text,
+    :not(.md-input[value=""]) + .md-label .md-label-text {
+        background-color: var(--color-blue);
+        color: var(--color-light-gray);
+        border-radius: 0.375rem;
+    }
+
     h3,
     h2 {
-        color: var(--color-blue);
+        color: var(--color-light-gray);
     }
 
     @media screen and (min-width: 576px) {
@@ -63,5 +91,11 @@
     password.addEventListener('input', () => {
         password.setAttribute('value', password.value);
     });
+
+    // Change image every 5 seconds (adjust as needed)
+    setInterval(changeImage, 5000);
+
+    // Initial image load
+    changeImage();
 </script>
 {% endblock content %}

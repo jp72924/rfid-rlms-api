@@ -11,7 +11,12 @@ body,
 }
 
 body {
-    background-color: var(--color-light-gray);
+    background-image: url('');
+    /* Placeholder for image URL */
+    /* background-size: cover; */
+    background-position: center center;
+    background-repeat: no-repeat;
+    min-height: 100vh;
 
     font-family: var(--default-font, var(--alt-font, var(--safe-font)));
     font-optical-sizing: auto;
@@ -39,6 +44,9 @@ a {
     border-radius: 1rem;
     padding: 0.5rem;
     gap: 0.5rem;
+
+    overflow: auto;
+    scrollbar-width: none;
 }
 
 .item {

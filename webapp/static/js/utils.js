@@ -5,3 +5,19 @@ function datetime() {
     now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
     return now.toISOString().slice(0, 16); // YYYY-MM-DDTHH:mm
 }
+
+function changeImage() {
+    const topic = 'nature';
+    const width = window.screen.width;
+    const height = window.screen.height;
+    // Replace with your desired image source (consider copyright!)
+    const imageUrl = `https://source.unsplash.com/random/${width}x${height}/?${topic}`;
+
+    document.body.style.backgroundImage = `url(${imageUrl})`;
+}
+
+// Change image every 5 seconds (adjust as needed)
+// setInterval(changeImage, 5000);
+
+// Initial image load
+// changeImage();

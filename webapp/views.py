@@ -30,11 +30,22 @@ def convert_to_django_date(datetime_str):
   Returns:
       A Django model date object representing the parsed datetime.
   """
+  
   try:
     datetime_obj = datetime.strptime(datetime_str, "%Y-%m-%dT%H:%M")
     return datetime_obj # Extract the date portion for Django model
   except ValueError:
     raise ValueError(f"Invalid datetime string format: {datetime_str}")
+
+
+def notify(request, type, title, content):
+  message = {'type': type, 'title': title, 'content': content}
+  request.session['message'] = message
+
+
+def log(request, type, message):
+  activity_record = ActivityRecord(type=type, message=message, user=request.user)
+  activity_record.save()
 
 
 def authorize(request):
@@ -105,6 +116,52 @@ def has_authorization(access_card, device_id, is_locked):
   return authorized
 
 
+def login_view(request):
+  if not request.user.is_authenticated:
+    if request.method == 'POST':
+      username = request.POST.get('username')
+      password = request.POST.get('password')
+      user = authenticate(request, username=username, password=password)
+      if user:
+        login(request, user)
+        
+        title = f"Welcome, @{username}!"
+        message = "You are successfully logged in"
+        
+        notify(request, "info", title, message)
+        log(request, ActivityRecord.Type.LOGIN, message)
+        return redirect('card_list')  # Redirect to your homepage
+      else:
+        # Login failed
+        notify(request, "danger", 'Login failed', 'Username or password was incorrect')
+  
+    return render(request, 'webapp/login.html')
+  return redirect('card_list')
+
+
+@login_required
+def logout_view(request):  
+  # title = f"Goodbye, until next time!"
+  message = "You are successfully logged out"
+        
+  # notify(request, "info", title, message)
+  log(request, ActivityRecord.Type.LOGOUT, message)
+  
+  logout(request)
+  # Optionally redirect to a specific page after logout
+  return redirect('login')  # Replace 'login' with your login URL name
+
+
+@login_required
+def booking(request):
+  view = 'booking'
+  cards = Card.objects.all()
+  locks = Lock.objects.all()
+  context = {'view': view, 'cards': cards, 'locks': locks}
+  return render(request, 'webapp/booking.html', context)
+
+
+@login_required
 def card_list(request):
   view = 'cards'
   cards = Card.objects.all()
@@ -114,6 +171,7 @@ def card_list(request):
   return render(request, 'webapp/cards.html', context)
 
 
+@login_required
 def card_detail(request, uuid):
   view = 'cards'
   cards = Card.objects.all()
@@ -126,6 +184,7 @@ def card_detail(request, uuid):
   return render(request, 'webapp/cards.html', context)
 
 
+@login_required
 def card_create(request):  
   if request.method == 'POST':
     card_uuid = request.POST.get('uuid')
@@ -135,9 +194,15 @@ def card_create(request):
     card = Card(uuid=card_uuid, due_date=card_due_date, user=card_user)
     card.save()
 
+    title = f"New card added"
+    message = f"Access granted to @{card_user.username}"
+    
+    notify(request, "success", title, message)
+    log(request, ActivityRecord.Type.CREATE, message)
   return redirect('card_list')
 
 
+@login_required
 def card_update(request, uuid):
   try:
     card = Card.objects.get(uuid=uuid)
@@ -153,10 +218,17 @@ def card_update(request, uuid):
     card.user = card_user
     card.save()
     
+    title = f"Card updated"
+    message = f"@{card_user.username} now has access until {card_due_date}"
+    
+    notify(request, "info", title, message)
+    log(request, ActivityRecord.Type.UPDATE, message)
+    
     return redirect('card_detail', uuid=card.uuid)
   return redirect('card_list')
 
 
+@login_required
 def card_delete(request, uuid):
   try:
     card = Card.objects.get(uuid=uuid)
@@ -165,10 +237,17 @@ def card_delete(request, uuid):
     raise Http404("Card Not Found")
   card.delete()
   
+  title = f"Card removed"
+  message = f"Access revoked to @{card_user.username}"
+  
+  notify(request, "danger", title, message)
+  log(request, ActivityRecord.Type.DELETE, message)
+  
   return redirect('card_list')
 
 # Devices
 
+@login_required
 def device_list(request):
   view = 'devices'
   devices = Device.objects.all()
@@ -176,6 +255,7 @@ def device_list(request):
   return render(request, 'webapp/devices.html', context)
 
 
+@login_required
 def device_detail(request, id):
   view = 'devices'
   devices = Device.objects.all()
@@ -187,6 +267,7 @@ def device_detail(request, id):
   return render(request, 'webapp/devices.html', context)
 
 
+@login_required
 def device_create(request):
   if request.method == 'POST':
     device_chip = request.POST.get('chip-id')
@@ -194,9 +275,16 @@ def device_create(request):
     device = Device(chip_id=device_chip)
     device.save()
     
+    title = f"New device added"
+    message = f"{device_chip} is now available"
+    
+    notify(request, "success", title, message)
+    log(request, ActivityRecord.Type.CREATE, message)
+    
   return redirect('device_list')
 
 
+@login_required
 def device_update(request, id):
   try:
     device = Device.objects.get(chip_id=id)
@@ -208,10 +296,17 @@ def device_update(request, id):
     device.chip_id = device_chip
     device.save()
     
+    title = f"Device updated"
+    message = f"Record updated from {id} to {device_chip}"
+    
+    notify(request, "info", title, message)
+    log(request, ActivityRecord.Type.UPDATE, message)
+    
     return redirect('device_detail', id=device.chip_id)
   return redirect('device_list')
 
 
+@login_required
 def device_delete(request, id):
   try:
     device = Device.objects.get(chip_id=id)
@@ -219,10 +314,17 @@ def device_delete(request, id):
     raise Http404("Device Not Found")
   device.delete()
   
+  title = f"Device removed"
+  message = f"{device.chip_id} is not longer available"
+  
+  notify(request, "danger", title, message)
+  log(request, ActivityRecord.Type.DELETE, message)
+  
   return redirect('device_list')
 
 # Locks
 
+@login_required
 def lock_list(request):
   view = 'locks'
   locks = Lock.objects.all()
@@ -232,6 +334,7 @@ def lock_list(request):
   return render(request, 'webapp/locks.html', context)
 
 
+@login_required
 def lock_detail(request, name):
   view = 'locks'
   locks = Lock.objects.all()
@@ -245,6 +348,7 @@ def lock_detail(request, name):
   return render(request, 'webapp/locks.html', context)
 
 
+@login_required
 def lock_create(request):  
   if request.method == 'POST':
     lock_name = request.POST.get('name')
@@ -255,10 +359,17 @@ def lock_create(request):
     lock.save()
     
     lock.groups.set([lock_group])
+    
+    title = f"New lock added"
+    message = f"{lock_name} is linked to {lock_device.chip_id}"
+
+    notify(request, "success", title, message)
+    log(request, ActivityRecord.Type.CREATE, message)
 
   return redirect('lock_list')
 
 
+@login_required
 def lock_update(request, name):
   try:
     lock = Lock.objects.get(name=name)
@@ -275,10 +386,17 @@ def lock_update(request, name):
     
     lock.groups.set([lock_group])
     
+    title = f"Lock updated"
+    message = f"{lock_name} is now linked to {lock_device.chip_id}"
+    
+    notify(request, "info", title, message)
+    log(request, ActivityRecord.Type.UPDATE, message)
+    
     return redirect('lock_detail', name=lock.name)
   return redirect('lock_list')
 
 
+@login_required
 def lock_delete(request, name):
   try:
     lock = Lock.objects.get(name=name)
@@ -286,10 +404,17 @@ def lock_delete(request, name):
     raise Http404("Lock Not Found")
   lock.delete()
   
+  title = f"Lock removed"
+  message = f"{lock.name} is no longer linked to {lock.device.chip_id}, it is no longer accessible"
+  
+  notify(request, "danger", title, message)
+  log(request, ActivityRecord.Type.DELETE, message)
+  
   return redirect('lock_list')
 
 # Lock groups
 
+@login_required
 def group_lock_list(request):
   view = 'lock_groups'
   lock_groups = LockGroup.objects.all()
@@ -297,6 +422,7 @@ def group_lock_list(request):
   return render(request, 'webapp/lock_groups.html', context)
 
 
+@login_required
 def group_lock_detail(request, name):
   view = 'lock_groups'
   lock_groups = LockGroup.objects.all()
@@ -308,6 +434,7 @@ def group_lock_detail(request, name):
   return render(request, 'webapp/lock_groups.html', context)
 
 
+@login_required
 def group_lock_create(request):  
   if request.method == 'POST':
     group_name = request.POST.get('name')
@@ -317,6 +444,7 @@ def group_lock_create(request):
   return redirect('group_lock_list')
 
 
+@login_required
 def group_lock_update(request, name):
   try:
     group = LockGroup.objects.get(name=name)
@@ -330,6 +458,7 @@ def group_lock_update(request, name):
   return redirect('group_lock_list')
 
 
+@login_required
 def group_lock_delete(request, name):
   try:
     group = LockGroup.objects.get(name=name)
@@ -341,6 +470,7 @@ def group_lock_delete(request, name):
 
 # User groups
 
+@login_required
 def group_user_list(request):
   view = 'user_groups'
   user_groups = UserGroup.objects.all()
@@ -349,6 +479,7 @@ def group_user_list(request):
   return render(request, 'webapp/user_groups.html', context)
 
 
+@login_required
 def group_user_detail(request, name):
   view = 'user_groups'
   user_groups = UserGroup.objects.all()
@@ -361,6 +492,7 @@ def group_user_detail(request, name):
   return render(request, 'webapp/user_groups.html', context)
 
 
+@login_required
 def group_user_create(request):  
   if request.method == 'POST':
     group_name = request.POST.get('name')
@@ -375,6 +507,7 @@ def group_user_create(request):
   return redirect('group_user_list')
 
 
+@login_required
 def group_user_update(request, name):
   try:
     group = UserGroup.objects.get(name=name)
@@ -394,6 +527,7 @@ def group_user_update(request, name):
   return redirect('group_user_list')
 
 
+@login_required
 def group_user_delete(request, name):
   try:
     group = UserGroup.objects.get(name=name)
@@ -405,6 +539,7 @@ def group_user_delete(request, name):
 
 # Users
 
+@login_required
 def user_list(request):
   view = 'users'
   users = User.objects.all()
@@ -413,6 +548,7 @@ def user_list(request):
   return render(request, 'webapp/users.html', context)
 
 
+@login_required
 def user_detail(request, username):
   view = 'users'
   users = User.objects.all()
@@ -425,6 +561,7 @@ def user_detail(request, username):
   return render(request, 'webapp/users.html', context)
 
 
+@login_required
 def user_create(request):  
   if request.method == 'POST':
     user_first_name = request.POST.get('first-name')
@@ -436,9 +573,17 @@ def user_create(request):
     
     user = User.objects.create_user(username=user_name, password=user_password, email=user_email, first_name=user_first_name, last_name=user_last_name)
     user.groups.set([user_group])
+    
+    title = f"New user added"
+    message = f"@{user_name} added to {user_group.name} group"
+    
+    notify(request, "success", title, message)
+    log(request, ActivityRecord.Type.CREATE, message)
+    
   return redirect('user_list')
 
 
+@login_required
 def user_update(request, username):
   try:
     user = User.objects.get(username=username)
@@ -460,9 +605,17 @@ def user_update(request, username):
     user.save()
     
     user.groups.set([user_group])
+    
+    title = f"User updated"
+    message = f"@{user_name} updated to {user_group.name} group"
+    
+    notify(request, "info", title, message)
+    log(request, ActivityRecord.Type.UPDATE, message)
+    
   return redirect('user_list')
 
 
+@login_required
 def user_delete(request, username):
   try:
     user = User.objects.get(username=username)
@@ -471,9 +624,24 @@ def user_delete(request, username):
     raise Http404("User Not Found")
   user.delete()
   
+  title = f"User removed"
+  message = f"@{user.username} added to {user_group.name} group"
+  
+  notify(request, "danger", title, message)
+  log(request, ActivityRecord.Type.DELETE, message)
+  
   return redirect('user_list')
 
 
+@login_required
+def logs(request):
+  view = 'logs'
+  activity_records = ActivityRecord.objects.all()
+  context = {'view': view, 'activity_records': activity_records}
+  return render(request, 'webapp/logs.html', context)
+
+
+@login_required
 def report(request, name):
     current_time = datetime.now()
     timestamp = current_time.strftime("%Y%m%d")

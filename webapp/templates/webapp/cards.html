@@ -12,14 +12,14 @@
       <div class="inner-form">
         <div class="md-group">
           <input class="md-input" id="uuid" type="text" name="uuid" value="{{ query.uuid }}" aria-labelledby="label-uuid">
-          <label for="uuid" class="md-label" id="label-uuid">
+          <label for="uuid" class="md-label" id="label-uuid" required>
             <div class="md-label-text">UUID</div>
           </label>
         </div>
 
         <div class="md-group">
           <input class="md-input" list="users" id="user" name="user" value="{{ query.user.username }}"
-            aria-labelledby="label-user">
+            aria-labelledby="label-user" required>
           <label for="user" class="md-label" id="label-user">
             <div class="md-label-text">Choose a user</div>
           </label>
@@ -42,7 +42,7 @@
         <div class="md-group">
           <input class="md-input" id="due-date" type="datetime-local" name="due-date"
             value="{% if query %}{{ query.due_date|date:'Y-m-d' }}T{{ query.due_date|date:'H:i' }}{% else %}{% now 'Y-m-d' %}T{% now 'H:i' %}{% endif %}"
-            aria-labelledby="label-due-date">
+            aria-labelledby="label-due-date" required>
           <label for="due-date" class="md-label" id="label-due-date">
             <div class="md-label-text">Due date</div>
           </label>

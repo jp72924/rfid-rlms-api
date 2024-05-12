@@ -11,7 +11,7 @@
 
       <div class="inner-form">
         <div class="md-group">
-          <input class="md-input" id="name" type="text" name="name" value="{{ query.name }}" aria-labelledby="label-name">
+          <input class="md-input" id="name" type="text" name="name" value="{{ query.name }}" aria-labelledby="label-name" required>
           <label for="name" class="md-label" id="label-name">
             <div class="md-label-text">Name</div>
           </label>
@@ -19,7 +19,7 @@
 
         <div class="md-group">
           <input class="md-input" list="lock-groups" id="lock-group" name="lock-group" value="{{ query.groups.all|first }}"
-            aria-labelledby="label-lock-group">
+            aria-labelledby="label-lock-group" required>
           <label for="lock-group" class="md-label" id="label-lock-group">
             <div class="md-label-text">Choose a group</div>
           </label>
@@ -32,7 +32,7 @@
 
         <div class="md-group">
           <input class="md-input" list="devices" id="device" name="device" value="{{ query.device.chip_id }}"
-            aria-labelledby="label-device">
+            aria-labelledby="label-device" required>
           <label for="device" class="md-label" id="label-device">
             <div class="md-label-text">Choose a device</div>
           </label>

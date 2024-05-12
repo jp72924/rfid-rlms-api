@@ -11,35 +11,35 @@
 
       <div class="inner-form">
         <div class="md-group">
-          <input class="md-input" id="first-name" type="text" name="first-name" value="{{ query.first_name }}" aria-labelledby="label-first-name">
+          <input class="md-input" id="first-name" type="text" name="first-name" value="{{ query.first_name }}" aria-labelledby="label-first-name" required>
           <label for="first-name" class="md-label" id="label-first-name">
             <div class="md-label-text">First name</div>
           </label>
         </div>
 
         <div class="md-group">
-          <input class="md-input" id="last-name" type="text" name="last-name" value="{{ query.last_name }}" aria-labelledby="label-last-name">
+          <input class="md-input" id="last-name" type="text" name="last-name" value="{{ query.last_name }}" aria-labelledby="label-last-name" required>
           <label for="last-name" class="md-label" id="label-last-name">
             <div class="md-label-text">Last name</div>
           </label>
         </div>
 
         <div class="md-group">
-          <input class="md-input" id="username" type="text" name="username" value="{{ query.username }}" aria-labelledby="label-username">
+          <input class="md-input" id="username" type="text" name="username" value="{{ query.username }}" aria-labelledby="label-username" required>
           <label for="username" class="md-label" id="label-username">
             <div class="md-label-text">Username</div>
           </label>
         </div>
 
         <div class="md-group">
-          <input class="md-input" id="password" type="password" name="password" value="" aria-labelledby="label-password">
+          <input class="md-input" id="password" type="password" name="password" value="" aria-labelledby="label-password" required>
           <label for="password" class="md-label" id="label-password">
             <div class="md-label-text">Password</div>
           </label>
         </div>
 
         <div class="md-group">
-          <input class="md-input" id="email" type="email" name="email" value="{{ query.email }}" aria-labelledby="label-email">
+          <input class="md-input" id="email" type="email" name="email" value="{{ query.email }}" aria-labelledby="label-email" required>
           <label for="email" class="md-label" id="label-email">
             <div class="md-label-text">E-mail</div>
           </label>
@@ -47,7 +47,7 @@
 
         <div class="md-group">
           <input class="md-input" list="groups" id="group" name="group" value="{{ query.groups.all|first }}"
-            aria-labelledby="label-group">
+            aria-labelledby="label-group" required>
           <label for="group" class="md-label" id="label-group">
             <div class="md-label-text">Choose a group</div>
           </label>

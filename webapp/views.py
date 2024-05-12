@@ -157,7 +157,8 @@ def booking(request):
   view = 'booking'
   cards = Card.objects.all()
   locks = Lock.objects.all()
-  context = {'view': view, 'cards': cards, 'locks': locks}
+  users = User.objects.all()
+  context = {'view': view, 'cards': cards, 'locks': locks, 'users': users}
   return render(request, 'webapp/booking.html', context)
 
 

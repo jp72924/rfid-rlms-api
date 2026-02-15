@@ -53,6 +53,7 @@
         <div class="sidebar">
             <div class="inner-sidebar d-flex">
 
+                {% if user|in_groups:"Operators" %}
                 <div class="item d-flex fx-center fy-center no-select {% if view == 'booking' %}active{% endif %}">
                     <a href="{% url 'booking' %}" class="full-width text-center"><i class="bi bi-building-fill"></i><span class="item-tag">Bookings</span></a>
                 </div>
@@ -61,29 +62,35 @@
                     <a href="{% url 'card_list' %}" class="full-width text-center"><i class="bi bi-credit-card-fill"></i><span class="item-tag">Cards</span></a>
                 </div>
 
-                <div class="item d-flex fx-center fy-center no-select {% if view == 'devices' %}active{% endif %}">
-                    <a href="{% url 'device_list' %}" class="full-width text-center"><i class="bi bi-wifi"></i><span class="item-tag">Devices</span></a>
-                </div>
-
-                <div class="item d-flex fx-center fy-center no-select {% if view == 'locks' %}active{% endif %}">
-                    <a href="{% url 'lock_list' %}" class="full-width text-center"><i class="bi bi-door-closed-fill"></i><span class="item-tag">Locks</span></a>
-                </div>
+                    {% if user|in_groups:"Admins" %}
+                    <div class="item d-flex fx-center fy-center no-select {% if view == 'devices' %}active{% endif %}">
+                        <a href="{% url 'device_list' %}" class="full-width text-center"><i class="bi bi-wifi"></i><span class="item-tag">Devices</span></a>
+                    </div>
+                    
+                    <div class="item d-flex fx-center fy-center no-select {% if view == 'locks' %}active{% endif %}">
+                        <a href="{% url 'lock_list' %}" class="full-width text-center"><i class="bi bi-door-closed-fill"></i><span class="item-tag">Locks</span></a>
+                    </div>
+                    {% endif %}
 
                 <div class="item d-flex fx-center fy-center no-select {% if view == 'users' %}active{% endif %}">
                     <a href="{% url 'user_list' %}" class="full-width text-center"><i class="bi bi-person-fill"></i><span class="item-tag">User</span></a>
                 </div>
 
-                <div class="item d-flex fx-center fy-center no-select {% if view == 'lock_groups' %}active{% endif %}">
-                    <a href="{% url 'group_lock_list' %}" class="full-width text-center"><i class="bi bi-diagram-3-fill"></i><span class="item-tag">Lock Group</span></a>
-                </div>
+                    {% if user|in_groups:"Admins" %}
+                    <div class="item d-flex fx-center fy-center no-select {% if view == 'lock_groups' %}active{% endif %}">
+                        <a href="{% url 'group_lock_list' %}" class="full-width text-center"><i class="bi bi-diagram-3-fill"></i><span class="item-tag">Lock Group</span></a>
+                    </div>
 
-                <div class="item d-flex fx-center fy-center no-select {% if view == 'user_groups' %}active{% endif %}">
-                    <a href="{% url 'group_user_list' %}" class="full-width text-center"><i class="bi bi-people-fill"></i><span class="item-tag">User Group</span></a>
-                </div>
+                    <div class="item d-flex fx-center fy-center no-select {% if view == 'user_groups' %}active{% endif %}">
+                        <a href="{% url 'group_user_list' %}" class="full-width text-center"><i class="bi bi-people-fill"></i><span class="item-tag">User Group</span></a>
+                    </div>
 
-                <div class="item d-flex fx-center fy-center no-select {% if view == 'logs' %}active{% endif %}">
-                    <a href="{% url 'logs' %}" class="full-width text-center"><i class="bi bi-file-earmark-text-fill"></i><span class="item-tag">Logs</span></a>
-                </div>
+                    <div class="item d-flex fx-center fy-center no-select {% if view == 'logs' %}active{% endif %}">
+                        <a href="{% url 'logs' %}" class="full-width text-center"><i class="bi bi-file-earmark-text-fill"></i><span class="item-tag">Logs</span></a>
+                    </div>
+                    {% endif %}
+
+                {% endif %}
 
                 <div class="item d-flex fx-center fy-center no-select">
                     <a href="{% url 'logout' %}" class="full-width text-center"><i class="bi bi-arrow-right-square-fill"></i><span class="item-tag">Sign out</span></a>

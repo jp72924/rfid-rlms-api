@@ -1,4 +1,5 @@
-from fileinput import filename
+from django.contrib.auth.decorators import user_passes_test
+from django.contrib.auth.models import Group
 from django.contrib.auth import authenticate
 from django.contrib.auth import login
 from django.contrib.auth import logout
@@ -72,6 +73,7 @@ def authorize(request):
 
   # Check authorization conditions
   authorized = has_authorization(card, device_id, is_locked)
+  print(f"Authorization check for card {card_uuid} on device {device_id} with lock status {is_locked}: {authorized}")
 
   # Prepare response based on authorization status
   response_message = {
@@ -106,14 +108,23 @@ def has_authorization(access_card, device_id, is_locked):
     door_lock = Lock.objects.get(device__chip_id=device_id)
     lock_group = door_lock.groups.get()
     user_group = access_card.user.groups.get()
+
     authorized_group = UserGroup.objects.get(name=user_group.name)
-    authorized = (lock_group in authorized_group.lock_groups.all() and not access_card.is_overdue())
-  except (Lock.DoesNotExist, Group.DoesNotExist, UserGroup.DoesNotExist):
+    
+    authorized = int(lock_group in authorized_group.lock_groups.all() and not access_card.is_overdue())
+  except (Lock.DoesNotExist, Group.DoesNotExist, UserGroup.DoesNotExist) as e:
+    print(f"Error during authorization check: {e}")
     return 0  # Missing association or object not found
   
   if authorized and (is_locked and not authorized_group.override_lock_pin):
     authorized = 2
   return authorized
+
+
+def group_check(allowed_groups):
+  def check(user):
+    return user.groups.filter(name__in=allowed_groups).exists() or user.is_superuser
+  return check
 
 
 def login_view(request):
@@ -130,15 +141,15 @@ def login_view(request):
         
         notify(request, "info", title, message)
         log(request, ActivityRecord.Type.LOGIN, message)
-        return redirect('card_list')  # Redirect to your homepage
+        return redirect('booking')  # Redirect to your homepage
       else:
         # Login failed
         notify(request, "danger", 'Login failed', 'Username or password was incorrect')
   
     return render(request, 'webapp/login.html')
-  return redirect('card_list')
+  return redirect('booking')
 
-
+@user_passes_test(group_check(['Admins', 'Operators']))
 @login_required
 def logout_view(request):  
   # title = f"Goodbye, until next time!"
@@ -152,6 +163,7 @@ def logout_view(request):
   return redirect('login')  # Replace 'login' with your login URL name
 
 
+@user_passes_test(group_check(['Admins', 'Operators']))
 @login_required
 def booking(request):
   view = 'booking'
@@ -162,6 +174,7 @@ def booking(request):
   return render(request, 'webapp/booking.html', context)
 
 
+@user_passes_test(group_check(['Admins', 'Operators']))
 @login_required
 def card_list(request):
   view = 'cards'
@@ -172,6 +185,7 @@ def card_list(request):
   return render(request, 'webapp/cards.html', context)
 
 
+@user_passes_test(group_check(['Admins', 'Operators']))
 @login_required
 def card_detail(request, uuid):
   view = 'cards'
@@ -185,6 +199,7 @@ def card_detail(request, uuid):
   return render(request, 'webapp/cards.html', context)
 
 
+@user_passes_test(group_check(['Admins', 'Operators']))
 @login_required
 def card_create(request):  
   if request.method == 'POST':
@@ -203,6 +218,7 @@ def card_create(request):
   return redirect('card_list')
 
 
+@user_passes_test(group_check(['Admins', 'Operators']))
 @login_required
 def card_update(request, uuid):
   try:
@@ -229,6 +245,7 @@ def card_update(request, uuid):
   return redirect('card_list')
 
 
+@user_passes_test(group_check(['Admins', 'Operators']))
 @login_required
 def card_delete(request, uuid):
   try:
@@ -248,6 +265,7 @@ def card_delete(request, uuid):
 
 # Devices
 
+@user_passes_test(group_check(['Admins']))
 @login_required
 def device_list(request):
   view = 'devices'
@@ -256,6 +274,7 @@ def device_list(request):
   return render(request, 'webapp/devices.html', context)
 
 
+@user_passes_test(group_check(['Admins']))
 @login_required
 def device_detail(request, id):
   view = 'devices'
@@ -268,6 +287,7 @@ def device_detail(request, id):
   return render(request, 'webapp/devices.html', context)
 
 
+@user_passes_test(group_check(['Admins']))
 @login_required
 def device_create(request):
   if request.method == 'POST':
@@ -285,6 +305,7 @@ def device_create(request):
   return redirect('device_list')
 
 
+@user_passes_test(group_check(['Admins']))
 @login_required
 def device_update(request, id):
   try:
@@ -307,6 +328,7 @@ def device_update(request, id):
   return redirect('device_list')
 
 
+@user_passes_test(group_check(['Admins']))
 @login_required
 def device_delete(request, id):
   try:
@@ -325,6 +347,7 @@ def device_delete(request, id):
 
 # Locks
 
+@user_passes_test(group_check(['Admins']))
 @login_required
 def lock_list(request):
   view = 'locks'
@@ -335,6 +358,7 @@ def lock_list(request):
   return render(request, 'webapp/locks.html', context)
 
 
+@user_passes_test(group_check(['Admins']))
 @login_required
 def lock_detail(request, name):
   view = 'locks'
@@ -349,6 +373,7 @@ def lock_detail(request, name):
   return render(request, 'webapp/locks.html', context)
 
 
+@user_passes_test(group_check(['Admins']))
 @login_required
 def lock_create(request):  
   if request.method == 'POST':
@@ -370,6 +395,7 @@ def lock_create(request):
   return redirect('lock_list')
 
 
+@user_passes_test(group_check(['Admins']))
 @login_required
 def lock_update(request, name):
   try:
@@ -397,6 +423,7 @@ def lock_update(request, name):
   return redirect('lock_list')
 
 
+@user_passes_test(group_check(['Admins']))
 @login_required
 def lock_delete(request, name):
   try:
@@ -415,6 +442,7 @@ def lock_delete(request, name):
 
 # Lock groups
 
+@user_passes_test(group_check(['Admins']))
 @login_required
 def group_lock_list(request):
   view = 'lock_groups'
@@ -423,6 +451,7 @@ def group_lock_list(request):
   return render(request, 'webapp/lock_groups.html', context)
 
 
+@user_passes_test(group_check(['Admins']))
 @login_required
 def group_lock_detail(request, name):
   view = 'lock_groups'
@@ -435,6 +464,7 @@ def group_lock_detail(request, name):
   return render(request, 'webapp/lock_groups.html', context)
 
 
+@user_passes_test(group_check(['Admins']))
 @login_required
 def group_lock_create(request):  
   if request.method == 'POST':
@@ -445,6 +475,7 @@ def group_lock_create(request):
   return redirect('group_lock_list')
 
 
+@user_passes_test(group_check(['Admins']))
 @login_required
 def group_lock_update(request, name):
   try:
@@ -459,6 +490,7 @@ def group_lock_update(request, name):
   return redirect('group_lock_list')
 
 
+@user_passes_test(group_check(['Admins']))
 @login_required
 def group_lock_delete(request, name):
   try:
@@ -471,6 +503,7 @@ def group_lock_delete(request, name):
 
 # User groups
 
+@user_passes_test(group_check(['Admins']))
 @login_required
 def group_user_list(request):
   view = 'user_groups'
@@ -480,6 +513,7 @@ def group_user_list(request):
   return render(request, 'webapp/user_groups.html', context)
 
 
+@user_passes_test(group_check(['Admins']))
 @login_required
 def group_user_detail(request, name):
   view = 'user_groups'
@@ -493,6 +527,7 @@ def group_user_detail(request, name):
   return render(request, 'webapp/user_groups.html', context)
 
 
+@user_passes_test(group_check(['Admins']))
 @login_required
 def group_user_create(request):  
   if request.method == 'POST':
@@ -508,6 +543,7 @@ def group_user_create(request):
   return redirect('group_user_list')
 
 
+@user_passes_test(group_check(['Admins']))
 @login_required
 def group_user_update(request, name):
   try:
@@ -528,6 +564,7 @@ def group_user_update(request, name):
   return redirect('group_user_list')
 
 
+@user_passes_test(group_check(['Admins']))
 @login_required
 def group_user_delete(request, name):
   try:
@@ -540,6 +577,7 @@ def group_user_delete(request, name):
 
 # Users
 
+@user_passes_test(group_check(['Admins', 'Operators']))
 @login_required
 def user_list(request):
   view = 'users'
@@ -549,6 +587,7 @@ def user_list(request):
   return render(request, 'webapp/users.html', context)
 
 
+@user_passes_test(group_check(['Admins', 'Operators']))
 @login_required
 def user_detail(request, username):
   view = 'users'
@@ -562,6 +601,7 @@ def user_detail(request, username):
   return render(request, 'webapp/users.html', context)
 
 
+@user_passes_test(group_check(['Admins', 'Operators']))
 @login_required
 def user_create(request):  
   if request.method == 'POST':
@@ -584,6 +624,7 @@ def user_create(request):
   return redirect('user_list')
 
 
+@user_passes_test(group_check(['Admins', 'Operators']))
 @login_required
 def user_update(request, username):
   try:
@@ -616,6 +657,7 @@ def user_update(request, username):
   return redirect('user_list')
 
 
+@user_passes_test(group_check(['Admins', 'Operators']))
 @login_required
 def user_delete(request, username):
   try:
@@ -634,6 +676,7 @@ def user_delete(request, username):
   return redirect('user_list')
 
 
+@user_passes_test(group_check(['Admins']))
 @login_required
 def logs(request):
   view = 'logs'
@@ -642,6 +685,7 @@ def logs(request):
   return render(request, 'webapp/logs.html', context)
 
 
+@user_passes_test(group_check(['Admins']))
 @login_required
 def report(request, name):
     current_time = datetime.now()

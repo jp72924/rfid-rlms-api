@@ -22,6 +22,10 @@ from weasyprint import HTML
 from datetime import datetime
 
 
+# =====================================================================================
+# Helpers Functions
+# =====================================================================================
+
 def convert_to_django_date(datetime_str):
   """Converts a string in 'YYYY-MM-DDThh:mm' format to a Django model date.
 
@@ -50,75 +54,84 @@ def log(request, type, message):
 
 
 def authorize(request):
-  """
-  This function checks user access based on card UID, device ID, and lock status.
+    card_uuid = request.GET.get('uuid')
+    chip_id = request.GET.get('dev')  # This is the hardware chip_id
+    is_locked = int(request.GET.get('status', 0))
 
-  Args:
-      request: A Django HttpRequest object containing query parameters.
+    # --- STEP 1: Device Verification & Auto-Registration ---
+    # Retrieve the device or create it as UNKNOWN if it's new
+    device, created = Device.objects.get_or_create(
+        chip_id=chip_id,
+        defaults={'status': Device.Status.UNKNOWN}
+    )
 
-  Returns:
-      A Django JsonResponse object with the authorization status.
-  """
+    if created:
+        ActivityRecord.objects.create(
+            type=ActivityRecord.Type.CREATE,
+            message=f"New device {chip_id} connected"
+        )
 
-  # Extract data from request parameters
-  card_uuid = request.GET.get('uuid')
-  device_id = request.GET.get('dev')
-  is_locked = int(request.GET.get('status', 0))  # Default lock status to 0
+    # Security Gate: If not TRUSTED, kill the request immediately
+    if device.status != Device.Status.TRUSTED:
+        return JsonResponse({
+            "status": 0, 
+            "message": f"DEVICE {device.get_status_display().upper()}"
+        })
 
-  # Try to retrieve card object
-  try:
-    card = Card.objects.get(uuid=card_uuid)
-  except Card.DoesNotExist:
-    return JsonResponse({"status": 0})  # Not authorized (card not found)
+    # --- STEP 2: Card Verification ---
+    try:
+        card = Card.objects.get(uuid=card_uuid)
+    except Card.DoesNotExist:
+        return JsonResponse({"status": 0, "message": "CARD UNKNOWN"})
 
-  # Check authorization conditions
-  authorized = has_authorization(card, device_id, is_locked)
-  print(f"Authorization check for card {card_uuid} on device {device_id} with lock status {is_locked}: {authorized}")
-
-  # Prepare response based on authorization status
-  response_message = {
-      1: "AUTHORIZED",
-      2: "DO NOT DISTURB",
-      0: "NOT AUTHORIZED"
-  }[authorized]
-  
-  lock = Lock.objects.filter(device__chip_id=device_id).first()
-  access_record = AccessRecord(is_locked=bool(is_locked), card=card, lock=lock)
-  access_record.save()
-  return JsonResponse({"status": authorized, "message": response_message})
-
-
-def has_authorization(access_card, device_id, is_locked):
-  """
-  Checks if the user associated with the access card is authorized to access the lock.
-
-  Args:
-      access_card: The access card object used for access.
-      device_id: The ID of the device containing the lock.
-      is_locked: Whether the lock is currently locked.
-
-  Returns:
-      An integer representing the authorization level:
-          0: Not authorized
-          1: Authorized
-          2: Not authorized with override (lock remains locked)
-  """
-
-  try:
-    door_lock = Lock.objects.get(device__chip_id=device_id)
-    lock_group = door_lock.groups.get()
-    user_group = access_card.user.groups.get()
-
-    authorized_group = UserGroup.objects.get(name=user_group.name)
+    # --- STEP 3: Logic Delegation ---
+    authorized = has_authorization(card, chip_id, is_locked)
     
-    authorized = int(lock_group in authorized_group.lock_groups.all() and not access_card.is_overdue())
-  except (Lock.DoesNotExist, Group.DoesNotExist, UserGroup.DoesNotExist) as e:
-    print(f"Error during authorization check: {e}")
-    return 0  # Missing association or object not found
-  
-  if authorized and (is_locked and not authorized_group.override_lock_pin):
-    authorized = 2
-  return authorized
+    response_messages = {
+        1: "AUTHORIZED",
+        2: "DO NOT DISTURB",
+        0: "NOT AUTHORIZED"
+    }
+    
+    # --- STEP 4: Logging ---
+    # We can now use the 'device' object we already fetched to find the lock
+    lock = Lock.objects.filter(device=device).first()
+    AccessRecord.objects.create(is_locked=bool(is_locked), card=card, lock=lock)
+
+    return JsonResponse({
+        "status": authorized, 
+        "message": response_messages.get(authorized, "ERROR")
+    })
+
+
+def has_authorization(access_card, chip_id, is_locked):
+    try:
+        # 1. Identify the lock and its associated LockGroups
+        door_lock = Lock.objects.get(device__chip_id=chip_id)
+        lock_groups = door_lock.groups.all()
+        
+        # 2. Get the User's UserGroup (Extended Group)
+        # We assume the Django User is linked to exactly one UserGroup
+        django_group = access_card.user.groups.first()
+        user_group_ext = UserGroup.objects.get(name=django_group.name)
+
+        # 3. Check if any of the lock's groups intersect with the user's allowed groups
+        # AND check if the card is expired
+        has_group_access = lock_groups.filter(id__in=user_group_ext.lock_groups.all()).exists()
+        is_valid_card = not access_card.is_overdue()
+
+        if not (has_group_access and is_valid_card):
+            return 0 # Not Authorized
+
+        # 4. Handle the "Lock Pin" (DND) logic
+        if is_locked and not user_group_ext.override_lock_pin:
+            return 2 # Authorized but blocked by physical pin
+
+        return 1 # Fully Authorized
+
+    except (Lock.DoesNotExist, UserGroup.DoesNotExist, AttributeError) as e:
+        print(f"Auth Error: {e}")
+        return 0
 
 
 def group_check(allowed_groups):
@@ -141,13 +154,13 @@ def login_view(request):
         
         notify(request, "info", title, message)
         log(request, ActivityRecord.Type.LOGIN, message)
-        return redirect('booking')  # Redirect to your homepage
+        return redirect('card_list')  # Redirect to your homepage
       else:
         # Login failed
         notify(request, "danger", 'Login failed', 'Username or password was incorrect')
   
     return render(request, 'webapp/login.html')
-  return redirect('booking')
+  return redirect('card_list')
 
 @user_passes_test(group_check(['Admins', 'Operators']))
 @login_required
@@ -163,13 +176,26 @@ def logout_view(request):
   return redirect('login')  # Replace 'login' with your login URL name
 
 
+# =====================================================================================
+# Cards
+# =====================================================================================
+
 @user_passes_test(group_check(['Admins', 'Operators']))
 @login_required
 def booking(request):
   view = 'booking'
-  cards = Card.objects.all()
   locks = Lock.objects.all()
-  users = User.objects.all()
+  
+  # Check if the user is in the 'Operators' group
+  is_operator = request.user.groups.filter(name='Operators').exists()
+  if is_operator:
+    # Get all cards from users in the 'Guests' group
+    cards = Card.objects.filter(user__groups__name='Guests')
+    users = User.objects.filter(groups__name='Guests')
+  else:
+    cards = Card.objects.all()
+    users = User.objects.all()
+
   context = {'view': view, 'cards': cards, 'locks': locks, 'users': users}
   return render(request, 'webapp/booking.html', context)
 
@@ -178,9 +204,18 @@ def booking(request):
 @login_required
 def card_list(request):
   view = 'cards'
-  cards = Card.objects.all()
   locks = Lock.objects.all()
-  users = User.objects.all()
+
+  # Check if the user is in the 'Operators' group
+  is_operator = request.user.groups.filter(name='Operators').exists()
+  if is_operator:
+    # Get all cards from users in the 'Guests' group
+    cards = Card.objects.filter(user__groups__name='Guests')
+    users = User.objects.filter(groups__name='Guests')
+  else:
+    cards = Card.objects.all()
+    users = User.objects.all()
+
   context = {'view': view, 'cards': cards, 'locks': locks, 'users': users}
   return render(request, 'webapp/cards.html', context)
 
@@ -189,8 +224,17 @@ def card_list(request):
 @login_required
 def card_detail(request, uuid):
   view = 'cards'
-  cards = Card.objects.all()
-  users = User.objects.all()
+
+  # Check if the user is in the 'Operators' group
+  is_operator = request.user.groups.filter(name='Operators').exists()
+  if is_operator:
+    # Get all cards from users in the 'Guests' group
+    cards = Card.objects.filter(user__groups__name='Guests')
+    users = User.objects.filter(groups__name='Guests')
+  else:
+    cards = Card.objects.all()
+    users = User.objects.all()
+
   try:
     card = Card.objects.get(uuid=uuid)
   except Card.DoesNotExist:
@@ -263,7 +307,9 @@ def card_delete(request, uuid):
   
   return redirect('card_list')
 
+# =====================================================================================
 # Devices
+# =====================================================================================
 
 @user_passes_test(group_check(['Admins']))
 @login_required
@@ -345,7 +391,29 @@ def device_delete(request, id):
   
   return redirect('device_list')
 
+
+@user_passes_test(group_check(['Admins']))
+@login_required
+def device_authorize(request, id):
+  try:
+    device = Device.objects.get(chip_id=id)
+  except Device.DoesNotExist:
+    raise Http404("Device Not Found")
+  
+  device.status = Device.Status.TRUSTED
+  device.save()
+  
+  title = f"Device authorized"
+  message = f"{device.chip_id} can operate locks"
+  
+  notify(request, "success", title, message)
+  log(request, ActivityRecord.Type.UPDATE, message)
+  
+  return redirect('device_list')
+
+# =====================================================================================
 # Locks
+# =====================================================================================
 
 @user_passes_test(group_check(['Admins']))
 @login_required
@@ -440,7 +508,9 @@ def lock_delete(request, name):
   
   return redirect('lock_list')
 
-# Lock groups
+# =====================================================================================
+# Lock Groups
+# =====================================================================================
 
 @user_passes_test(group_check(['Admins']))
 @login_required
@@ -501,7 +571,9 @@ def group_lock_delete(request, name):
   
   return redirect('group_lock_list')
 
-# User groups
+# =====================================================================================
+# User Groups
+# =====================================================================================
 
 @user_passes_test(group_check(['Admins']))
 @login_required
@@ -575,14 +647,25 @@ def group_user_delete(request, name):
   
   return redirect('group_user_list')
 
+# =====================================================================================
 # Users
+# =====================================================================================
 
 @user_passes_test(group_check(['Admins', 'Operators']))
 @login_required
 def user_list(request):
   view = 'users'
-  users = User.objects.all()
-  groups = UserGroup.objects.all()
+
+  # Check if the user is in the 'Operators' group
+  is_operator = request.user.groups.filter(name='Operators').exists()
+  if is_operator:
+    # Get all users in the 'Guests' group
+    users = User.objects.filter(groups__name='Guests')
+    groups = UserGroup.objects.filter(name='Guests')
+  else:
+    users = User.objects.all()
+    groups = UserGroup.objects.all()
+
   context = {'view': view, 'users': users, 'groups': groups}
   return render(request, 'webapp/users.html', context)
 
@@ -591,8 +674,17 @@ def user_list(request):
 @login_required
 def user_detail(request, username):
   view = 'users'
-  users = User.objects.all()
-  groups = UserGroup.objects.all()
+
+  # Check if the user is in the 'Operators' group
+  is_operator = request.user.groups.filter(name='Operators').exists()
+  if is_operator:
+    # Get all users in the 'Guests' group
+    users = User.objects.filter(groups__name='Guests')
+    groups = UserGroup.objects.filter(name='Guests')
+  else:
+    users = User.objects.all()
+    groups = UserGroup.objects.all()
+
   try:
     user = User.objects.get(username=username)
   except User.DoesNotExist:
@@ -675,6 +767,10 @@ def user_delete(request, username):
   
   return redirect('user_list')
 
+
+# =====================================================================================
+# Logs & Reports
+# =====================================================================================
 
 @user_passes_test(group_check(['Admins']))
 @login_required

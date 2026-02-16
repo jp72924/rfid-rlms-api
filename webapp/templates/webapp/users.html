@@ -1,4 +1,5 @@
 {% extends 'webapp/base.html' %}
+{% load custom_tags %}
 
 {% block content %}
 <div class="cover d-flex fx-center fy-center" {% if not query %}style="display: none" {% endif %}>
@@ -73,28 +74,44 @@
   <table class="table">
     <thead class="thead">
       <tr class="tr">
+
+        {% if user|in_groups:"Admins" %}
         <th class="no-select">ID</th>
+        {% endif %}
+        
         <th class="no-select">Last name</th>
         <th class="no-select">First name</th>
         <th class="no-select">Username</th>
         <th class="no-select">E-mail</th>
+
+        {% if user|in_groups:"Admins" %}
         <th class="no-select">Group</th>
+        {% endif %}
+
         <th class="no-select"><i class="bi bi-gear"></i></th>
       </tr>
     </thead>
     <tbody class="tbody">
-      {% for user in users %}
+      {% for user_item in users %}
       <tr class="tr">
-        <td>{{ user.id }}</td>
-        <td>{{ user.last_name }}</td>
-        <td>{{ user.first_name }}</td>
-        <td>@{{ user.username }}</td>
-        <td>{{ user.email }}</td>
-        <td>{{ user.groups.all|first }}</td>
+
+        {% if user|in_groups:"Admins" %}
+        <td>{{ user_item.id }}</td>
+        {% endif %}
+
+        <td>{{ user_item.last_name }}</td>
+        <td>{{ user_item.first_name }}</td>
+        <td>@{{ user_item.username }}</td>
+        <td>{{ user_item.email }}</td>
+
+        {% if user|in_groups:"Admins" %}
+        <td>{{ user_item.groups.all|first }}</td>
+        {% endif %}
+
         <td>
-          <button class="btn btn-more btn-edit" onclick="location.href='{% url 'user_detail' username=user.username %}'"><i
+          <button class="btn btn-more btn-edit" onclick="location.href='{% url 'user_detail' username=user_item.username %}'"><i
               class="bi bi-pencil-fill"></i></button>
-          <button class="btn btn-more btn-delete" onclick="location.href='{% url 'user_delete' username=user.username %}'"><i
+          <button class="btn btn-more btn-delete" onclick="location.href='{% url 'user_delete' username=user_item.username %}'"><i
               class="bi bi-trash3-fill"></i></button>
         </td>
       </tr>

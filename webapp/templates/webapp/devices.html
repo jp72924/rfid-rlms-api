@@ -33,17 +33,24 @@
       <tr class="tr">
         <th class="no-select">ID</th>
         <th class="no-select">Chip</th>
+        <th class="no-select">Status</th>
         <th class="no-select"><i class="bi bi-gear"></i></th>
       </tr>
     </thead>
     <tbody class="tbody">
       {% for device in devices %}
-      <tr class="tr">
+      <tr class="tr" {% if device.status == 'unknown' %}style="background-color: var(--color-light-yellow);" {% endif %}>
         <td>{{ device.id }}</td>
         <td>{{ device.chip_id }}</td>
+        <td>{{ device.get_status_display }}</td>
         <td>
+          {% if device.status == 'unknown' %}
+          <button class="btn btn-more btn-green" onclick="location.href='{% url 'device_authorize' id=device.chip_id %}'"><i
+              class="bi bi-check2"></i></button> 
+          {% else %}
           <button class="btn btn-more btn-edit" onclick="location.href='{% url 'device_detail' id=device.chip_id %}'"><i
               class="bi bi-pencil-fill"></i></button>
+          {% endif %}
           <button class="btn btn-more btn-delete" onclick="location.href='{% url 'device_delete' id=device.chip_id %}'"><i
               class="bi bi-trash3-fill"></i></button>
         </td>

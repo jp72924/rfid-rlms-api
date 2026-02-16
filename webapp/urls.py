@@ -21,6 +21,7 @@ urlpatterns = [
   path('device/<str:id>', views.device_detail, name='device_detail'),  # Detail view for a specific device
   path('device/update/<str:id>', views.device_update, name='device_update'),  # Update an existing device
   path('device/delete/<str:id>', views.device_delete, name='device_delete'),  # Delete a device
+  path('device/authorize/<str:id>', views.device_authorize, name='device_authorize'),  # Authorize a device
   
   path('lock/list', views.lock_list, name='lock_list'),  # List all locks
   path('lock/create', views.lock_create, name='lock_create'),  # Create a new lock

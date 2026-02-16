@@ -32,8 +32,15 @@ class UserGroup(Group):
 
 
 class Device(models.Model):
+  class Status(models.TextChoices):
+      UNKNOWN = 'unknown', 'Unknown'   # Default for new/unprovisioned devices
+      TRUSTED = 'trusted', 'Trusted'   # Explicitly allowed to operate locks
+      
   id = models.AutoField(primary_key=True)
   chip_id = models.CharField(max_length=255, unique=True)
+
+  # The new indicator field
+  status = models.CharField(max_length=10, choices=Status.choices, default=Status.UNKNOWN)
 
 
 class Lock(models.Model):
@@ -58,7 +65,6 @@ class Card(models.Model):
 
 
 class AccessRecord(models.Model):
-
   timestamp = models.DateTimeField(auto_now_add=True)
   is_locked = models.BooleanField(default=False)
   card = models.ForeignKey(Card, on_delete=models.CASCADE, null=True)

@@ -7,11 +7,11 @@ function datetime() {
 }
 
 function changeImage() {
-    const topic = 'nature';
+    // const topic = 'nature';
     const width = window.screen.width;
     const height = window.screen.height;
     // Replace with your desired image source (consider copyright!)
-    const imageUrl = `https://source.unsplash.com/random/${width}x${height}/?${topic}`;
+    const imageUrl = `https://picsum.photos/${width}/${height}`;
 
     document.body.style.backgroundImage = `url(${imageUrl})`;
 }

@@ -13,6 +13,15 @@
     box-shadow: var(--soft-shadow);
 }
 
+.btn-green {
+    color: var(--color-green) !important;
+}
+
+.btn-green:hover {
+    background-color: var(--color-green) !important;
+    color: #fff !important;
+}
+
 .btn-edit {
     color: var(--color-dark-blue) !important;
 }

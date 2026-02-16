@@ -54,9 +54,12 @@
             <div class="inner-sidebar d-flex">
 
                 {% if user|in_groups:"Operators" %}
-                <div class="item d-flex fx-center fy-center no-select {% if view == 'booking' %}active{% endif %}">
-                    <a href="{% url 'booking' %}" class="full-width text-center"><i class="bi bi-building-fill"></i><span class="item-tag">Bookings</span></a>
-                </div>
+
+                    {% if not user|in_groups:"Admins" %}
+                    <div class="item d-flex fx-center fy-center no-select {% if view == 'booking' %}active{% endif %}">
+                        <a href="{% url 'booking' %}" class="full-width text-center"><i class="bi bi-building-fill"></i><span class="item-tag">Bookings</span></a>
+                    </div>
+                    {% endif %}
 
                 <div class="item d-flex fx-center fy-center no-select {% if view == 'cards' %}active{% endif %}">
                     <a href="{% url 'card_list' %}" class="full-width text-center"><i class="bi bi-credit-card-fill"></i><span class="item-tag">Cards</span></a>
